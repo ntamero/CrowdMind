@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, Search, Plus, Menu, TrendingUp, Trophy, Zap,
-  User, Settings, Crown, LogOut, Bell, X,
+  User, Settings, Crown, LogOut, Bell, X, LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,6 +128,9 @@ export default function Navbar() {
                     </div>
                     <div className="h-px bg-border/50" />
                     <div className="p-1">
+                      <Link href="/dashboard" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <LayoutDashboard size={14} /> Dashboard
+                      </Link>
                       <Link href="/profile" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
                         <User size={14} /> Profile
                       </Link>

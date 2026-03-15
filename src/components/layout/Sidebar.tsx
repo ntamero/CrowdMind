@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   TrendingUp, Zap, Trophy, User, Settings,
   Brain, Crown, Shield, BarChart3, Flame, Globe, Star,
+  LayoutDashboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { categories } from '@/lib/mock-data';
@@ -13,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 const mainLinks = [
   { href: '/', icon: TrendingUp, label: 'Explore' },
   { href: '/predictions', icon: Zap, label: 'Predictions' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
   { href: '/ai-analysis', icon: Brain, label: 'AI Engine' },
   { href: '/profile', icon: User, label: 'Profile' },
