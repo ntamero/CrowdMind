@@ -46,6 +46,10 @@ export interface Question {
   expiresAt?: string;
   isBookmarked?: boolean;
   userVote?: string;
+  image?: string;
+  trendData?: number[];
+  volume24h?: number;
+  changePercent?: number;
 }
 
 export type QuestionCategory =
@@ -84,6 +88,9 @@ export interface Prediction {
   result?: string;
   prize?: number;
   createdAt: string;
+  image?: string;
+  trendData?: number[];
+  changePercent?: number;
 }
 
 export interface PredictionOption {

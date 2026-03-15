@@ -154,6 +154,10 @@ export const mockQuestions: Question[] = [
     visibility: 'public',
     createdAt: '2026-03-10T10:00:00Z',
     expiresAt: '2026-04-10T10:00:00Z',
+    image: 'https://picsum.photos/seed/ai-startup/800/400',
+    trendData: [45, 48, 52, 55, 60, 63, 67],
+    volume24h: 3400,
+    changePercent: 5.2,
   },
   {
     id: 'q2',
@@ -188,6 +192,10 @@ export const mockQuestions: Question[] = [
     status: 'trending',
     visibility: 'public',
     createdAt: '2026-03-12T14:00:00Z',
+    image: 'https://picsum.photos/seed/programming/800/400',
+    trendData: [50, 52, 51, 54, 56, 55, 58],
+    volume24h: 4800,
+    changePercent: 2.8,
   },
   {
     id: 'q3',
@@ -228,6 +236,10 @@ export const mockQuestions: Question[] = [
     status: 'active',
     visibility: 'public',
     createdAt: '2026-03-08T09:00:00Z',
+    image: 'https://picsum.photos/seed/remote-work/800/400',
+    trendData: [60, 58, 55, 53, 52, 50, 48],
+    volume24h: 2900,
+    changePercent: -2.1,
   },
   {
     id: 'q4',
@@ -260,6 +272,10 @@ export const mockQuestions: Question[] = [
     status: 'active',
     visibility: 'public',
     createdAt: '2026-03-11T16:00:00Z',
+    image: 'https://picsum.photos/seed/design-trends/800/400',
+    trendData: [30, 35, 40, 48, 55, 62, 70],
+    volume24h: 1800,
+    changePercent: 12.8,
   },
   {
     id: 'q5',
@@ -299,6 +315,10 @@ export const mockQuestions: Question[] = [
     status: 'trending',
     visibility: 'public',
     createdAt: '2026-03-09T12:00:00Z',
+    image: 'https://picsum.photos/seed/bitcoin/800/400',
+    trendData: [40, 44, 42, 50, 55, 53, 58],
+    volume24h: 7600,
+    changePercent: 8.4,
   },
   {
     id: 'q6',
@@ -317,6 +337,10 @@ export const mockQuestions: Question[] = [
     status: 'active',
     visibility: 'public',
     createdAt: '2026-03-14T08:00:00Z',
+    image: 'https://picsum.photos/seed/logo/800/400',
+    trendData: [20, 25, 30, 38, 45, 52, 58],
+    volume24h: 1200,
+    changePercent: 15.3,
   },
   {
     id: 'q7',
@@ -349,6 +373,10 @@ export const mockQuestions: Question[] = [
     status: 'trending',
     visibility: 'public',
     createdAt: '2026-03-13T11:00:00Z',
+    image: 'https://picsum.photos/seed/agi/800/400',
+    trendData: [35, 38, 42, 45, 50, 55, 62],
+    volume24h: 5200,
+    changePercent: 9.7,
   },
   {
     id: 'q8',
@@ -371,6 +399,10 @@ export const mockQuestions: Question[] = [
     status: 'active',
     visibility: 'public',
     createdAt: '2026-03-07T15:00:00Z',
+    image: 'https://picsum.photos/seed/startup-country/800/400',
+    trendData: [55, 52, 50, 48, 47, 45, 43],
+    volume24h: 2100,
+    changePercent: -3.5,
   },
 ];
 
@@ -394,6 +426,9 @@ export const mockPredictions: Prediction[] = [
     status: 'open',
     prize: 5000,
     createdAt: '2026-03-01T00:00:00Z',
+    image: 'https://picsum.photos/seed/bitcoin-price/800/400',
+    trendData: [40, 45, 50, 48, 55, 60, 65],
+    changePercent: 7.2,
   },
   {
     id: 'p2',
@@ -412,6 +447,9 @@ export const mockPredictions: Prediction[] = [
     status: 'open',
     prize: 3000,
     createdAt: '2026-02-15T00:00:00Z',
+    image: 'https://picsum.photos/seed/apple-glasses/800/400',
+    trendData: [25, 28, 32, 35, 38, 40, 42],
+    changePercent: 3.8,
   },
   {
     id: 'p3',
@@ -432,6 +470,9 @@ export const mockPredictions: Prediction[] = [
     status: 'open',
     prize: 10000,
     createdAt: '2026-01-10T00:00:00Z',
+    image: 'https://picsum.photos/seed/champions-league/800/400',
+    trendData: [30, 35, 38, 42, 45, 48, 52],
+    changePercent: 6.1,
   },
   {
     id: 'p4',
@@ -449,6 +490,9 @@ export const mockPredictions: Prediction[] = [
     totalParticipants: 11100,
     status: 'open',
     createdAt: '2026-02-01T00:00:00Z',
+    image: 'https://picsum.photos/seed/ai-regulation/800/400',
+    trendData: [45, 42, 38, 35, 33, 30, 28],
+    changePercent: -4.5,
   },
 ];
 
@@ -487,9 +531,9 @@ export const mockComments: Comment[] = [
 ];
 
 export const mockDailyQuestions: DailyQuestion[] = [
-  { id: 'dq1', title: 'Will AI replace 50% of jobs by 2035?', description: 'Daily challenge — answer and earn XP!', category: 'technology', xpReward: 50, expiresAt: '2026-03-15T23:59:59Z' },
-  { id: 'dq2', title: 'Best social media platform for marketing in 2026?', description: 'Help the community decide!', category: 'business', xpReward: 30, expiresAt: '2026-03-15T23:59:59Z' },
-  { id: 'dq3', title: 'Should universities teach AI as a mandatory subject?', description: 'Education policy question', category: 'education', xpReward: 40, expiresAt: '2026-03-15T23:59:59Z' },
+  { id: 'dq1', title: 'AI vs. Humans: Will Machines Replace 50% of Jobs by 2035?', description: 'The great automation debate — cast your vote and earn bonus XP!', category: 'technology', xpReward: 50, expiresAt: '2026-03-15T23:59:59Z' },
+  { id: 'dq2', title: 'TikTok, Threads, or X? The Ultimate Marketing Platform Showdown', description: 'Which platform delivers the best ROI for brands in 2026? Help the community decide!', category: 'business', xpReward: 30, expiresAt: '2026-03-15T23:59:59Z' },
+  { id: 'dq3', title: 'Should Every University Student Be Required to Learn AI?', description: 'A hot education policy debate — weigh in and shape the future of learning!', category: 'education', xpReward: 40, expiresAt: '2026-03-15T23:59:59Z' },
 ];
 
 export const mockAchievements: Achievement[] = [
@@ -572,4 +616,79 @@ export const categories: { value: string; label: string; icon: string; color: st
   { value: 'entertainment', label: 'Entertainment', icon: '🎬', color: '#ec4899' },
   { value: 'education', label: 'Education', icon: '📚', color: '#14b8a6' },
   { value: 'health', label: 'Health', icon: '🏥', color: '#22c55e' },
+];
+
+export const featuredMarkets = [
+  {
+    id: 'fm1',
+    title: 'Will GPT-5 Launch Before July 2026?',
+    image: 'https://picsum.photos/seed/gpt5-launch/800/400',
+    yesPercent: 72,
+    totalVotes: 89400,
+    volume24h: 12800,
+    changePercent: 8.3,
+    trendData: [35, 42, 48, 55, 62, 68, 72],
+    category: 'technology',
+    hot: true,
+  },
+  {
+    id: 'fm2',
+    title: 'Bitcoin Above $150K by End of 2026?',
+    image: 'https://picsum.photos/seed/bitcoin-150k/800/400',
+    yesPercent: 34,
+    totalVotes: 156000,
+    volume24h: 24500,
+    changePercent: -3.2,
+    trendData: [45, 42, 38, 40, 36, 35, 34],
+    category: 'finance',
+    hot: true,
+  },
+  {
+    id: 'fm3',
+    title: 'Tesla Stock Over $500 by Q3 2026?',
+    image: 'https://picsum.photos/seed/tesla-stock/800/400',
+    yesPercent: 58,
+    totalVotes: 67200,
+    volume24h: 8900,
+    changePercent: 4.1,
+    trendData: [40, 45, 50, 48, 52, 55, 58],
+    category: 'finance',
+    hot: false,
+  },
+  {
+    id: 'fm4',
+    title: 'Will Apple Release AR Glasses in 2026?',
+    image: 'https://picsum.photos/seed/apple-ar/800/400',
+    yesPercent: 41,
+    totalVotes: 43800,
+    volume24h: 5600,
+    changePercent: 2.7,
+    trendData: [30, 32, 35, 38, 37, 40, 41],
+    category: 'technology',
+    hot: false,
+  },
+  {
+    id: 'fm5',
+    title: 'Global AI Regulation Before 2027?',
+    image: 'https://picsum.photos/seed/ai-regulation/800/400',
+    yesPercent: 23,
+    totalVotes: 31200,
+    volume24h: 4200,
+    changePercent: -1.5,
+    trendData: [30, 28, 26, 25, 24, 23, 23],
+    category: 'politics',
+    hot: false,
+  },
+  {
+    id: 'fm6',
+    title: 'Champions League 2026: Real Madrid Wins?',
+    image: 'https://picsum.photos/seed/champions-league/800/400',
+    yesPercent: 45,
+    totalVotes: 92100,
+    volume24h: 15300,
+    changePercent: 6.8,
+    trendData: [28, 32, 35, 38, 40, 43, 45],
+    category: 'sports',
+    hot: true,
+  },
 ];
