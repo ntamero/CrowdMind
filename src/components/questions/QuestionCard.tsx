@@ -14,6 +14,7 @@ import {
   Sparkles,
   CheckCircle2,
   DollarSign,
+  Timer,
 } from 'lucide-react';
 import type { Question, QuestionCategory } from '@/types';
 import { formatNumber, timeAgo, cn } from '@/lib/utils';
@@ -40,7 +41,24 @@ const categoryConfig: Record<QuestionCategory, { emoji: string; gradient: string
 };
 
 // ---------------------------------------------------------------------------
-// Component
+// Time remaining helper
+// ---------------------------------------------------------------------------
+function getTimeRemaining(targetDate?: string): string | null {
+  if (!targetDate) return null;
+  const now = new Date();
+  const target = new Date(targetDate);
+  const diff = target.getTime() - now.getTime();
+  if (diff <= 0) return 'Ended';
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (days > 30) return `${Math.floor(days / 30)}mo ${days % 30}d`;
+  if (days > 0) return `${days}d ${hours}h`;
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${mins}m`;
+}
+
+// ---------------------------------------------------------------------------
+// Component — Compact Vertical Card (3-column friendly)
 // ---------------------------------------------------------------------------
 export default function QuestionCard({ question }: { question: Question }) {
   const [voted, setVoted] = useState<string | null>(question.userVote ?? null);
@@ -56,14 +74,9 @@ export default function QuestionCard({ question }: { question: Question }) {
   const leadPct = leading?.percentage ?? 0;
   const leadColor =
     leadPct >= 50 ? 'text-emerald-400' : leadPct >= 40 ? 'text-amber-400' : 'text-red-400';
-  const leadGlow =
-    leadPct >= 50
-      ? 'drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-      : leadPct >= 40
-        ? 'drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]'
-        : 'drop-shadow-[0_0_8px_rgba(239,68,68,0.4)]';
 
   const changePositive = (question.changePercent ?? 0) >= 0;
+  const timeLeft = getTimeRemaining(question.expiresAt);
 
   // ---- Vote handler ----
   const handleVote = (optionId: string) => {
@@ -90,19 +103,15 @@ export default function QuestionCard({ question }: { question: Question }) {
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] as const }}
         className={cn(
           'group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-card/80 backdrop-blur-md',
-          'transition-all duration-300',
+          'transition-all duration-300 flex flex-col',
           'hover:border-indigo-500/30 hover:shadow-[0_0_30px_-5px_rgba(99,102,241,0.15)]',
-          'flex flex-col md:flex-row',
         )}
       >
-        {/* ============================================================= */}
-        {/* IMAGE SECTION (left / top on mobile)                          */}
-        {/* ============================================================= */}
-        <div className="relative w-full md:w-[40%] min-h-[180px] md:min-h-[260px] shrink-0 overflow-hidden">
-          {/* Image or gradient placeholder */}
+        {/* ── Image Section (top) ── */}
+        <div className="relative h-[130px] overflow-hidden shrink-0">
           {question.image ? (
             <img
               src={question.image}
@@ -121,109 +130,112 @@ export default function QuestionCard({ question }: { question: Question }) {
             </div>
           )}
 
-          {/* Dark gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/60 hidden md:block" />
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-          {/* Category badge on image */}
-          <div className="absolute top-3 left-3 z-10">
+          {/* Category badge */}
+          <div className="absolute top-2.5 left-2.5 z-10">
             <Badge
-              className={cn(
-                'bg-black/50 backdrop-blur-sm border-white/10 text-white text-[11px] gap-1.5 px-2.5 py-1 capitalize',
-              )}
+              className="bg-black/50 backdrop-blur-sm border-white/10 text-white text-[9px] gap-1 px-2 py-0.5 capitalize font-bold uppercase tracking-wider"
             >
               <span>{catCfg.emoji}</span>
               {question.category}
             </Badge>
           </div>
 
-          {/* Status badges */}
-          <div className="absolute top-3 right-3 z-10 flex gap-1.5">
-            {question.status === 'trending' && (
-              <Badge className="bg-red-500/80 backdrop-blur-sm border-0 text-white text-[10px] gap-1 px-2 py-0.5">
-                <TrendingUp size={10} /> Hot
-              </Badge>
+          {/* Status + Timer badges — top-right */}
+          <div className="absolute top-2.5 right-2.5 z-10 flex gap-1.5">
+            {timeLeft && (
+              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-lg">
+                <Timer size={10} className="text-amber-400" />
+                <span className="text-[10px] font-bold">{timeLeft}</span>
+              </div>
             )}
-            {question.aiAnalysis && (
-              <Badge className="bg-indigo-500/80 backdrop-blur-sm border-0 text-white text-[10px] gap-1 px-2 py-0.5">
-                <Sparkles size={10} /> AI
+            {question.status === 'trending' && (
+              <Badge className="bg-red-500/80 backdrop-blur-sm border-0 text-white text-[9px] gap-1 px-1.5 py-0.5">
+                <TrendingUp size={9} /> Hot
               </Badge>
             )}
           </div>
 
-          {/* Big probability overlay on image (bottom) */}
-          <div className="absolute bottom-3 left-3 z-10">
-            <div className={cn('text-4xl font-black tracking-tight', leadColor, leadGlow)}>
-              {leadPct}%
+          {/* AI badge */}
+          {question.aiAnalysis && (
+            <div className="absolute bottom-2.5 right-2.5 z-10">
+              <Badge className="bg-indigo-500/80 backdrop-blur-sm border-0 text-white text-[9px] gap-1 px-1.5 py-0.5">
+                <Sparkles size={9} /> AI
+              </Badge>
             </div>
-            <div className="text-white/70 text-xs font-medium mt-0.5 max-w-[200px] line-clamp-1">
-              {leading?.text}
+          )}
+
+          {/* Leading probability — bottom-left on image */}
+          <div className="absolute bottom-2.5 left-2.5 z-10">
+            <div className={cn(
+              'text-2xl font-black',
+              leadColor,
+              leadPct >= 50
+                ? 'drop-shadow-[0_0_6px_rgba(16,185,129,0.4)]'
+                : leadPct >= 40
+                  ? 'drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]'
+                  : 'drop-shadow-[0_0_6px_rgba(239,68,68,0.4)]'
+            )}>
+              {leadPct}%
             </div>
           </div>
         </div>
 
-        {/* ============================================================= */}
-        {/* CONTENT SECTION (right / bottom on mobile)                    */}
-        {/* ============================================================= */}
-        <div className="flex flex-col flex-1 p-4 md:p-5 min-w-0">
-          {/* Top row: sparkline + change */}
-          <div className="flex items-start justify-between gap-3 mb-3">
-            {/* Title */}
+        {/* ── Content Section ── */}
+        <div className="flex flex-col flex-1 p-4 min-w-0">
+          {/* Title + Sparkline */}
+          <div className="flex items-start justify-between gap-2 mb-1">
             <Link
               href={`/questions/${question.id}`}
               className="no-underline text-inherit flex-1 min-w-0"
             >
-              <h3 className="text-[15px] font-bold leading-snug hover:text-indigo-400 transition-colors cursor-pointer line-clamp-2">
+              <h3 className="text-[14px] font-bold leading-snug hover:text-indigo-400 transition-colors cursor-pointer line-clamp-2">
                 {question.title}
               </h3>
             </Link>
-
-            {/* Sparkline + change badge */}
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              {question.trendData && question.trendData.length >= 2 && (
-                <SparklineChart
-                  data={question.trendData}
-                  width={72}
-                  height={28}
-                  positive={changePositive}
-                />
-              )}
-              {question.changePercent !== undefined && (
-                <span
-                  className={cn(
-                    'text-[11px] font-bold px-1.5 py-0.5 rounded-md',
-                    changePositive
-                      ? 'text-emerald-400 bg-emerald-500/10'
-                      : 'text-red-400 bg-red-500/10',
-                  )}
-                >
-                  {changePositive ? '+' : ''}
-                  {question.changePercent.toFixed(1)}%
-                </span>
-              )}
-            </div>
           </div>
 
           {/* Description */}
           {question.description && (
-            <p className="text-[12px] text-muted-foreground leading-relaxed mb-3 line-clamp-2">
+            <p className="text-[11px] text-muted-foreground leading-relaxed mb-2.5 line-clamp-1">
               {question.description}
             </p>
           )}
 
-          {/* Volume indicator */}
-          {question.volume24h !== undefined && question.volume24h > 0 && (
-            <div className="flex items-center gap-1.5 mb-3 text-[11px] text-muted-foreground/70">
-              <Activity size={11} />
-              <span>{formatNumber(question.volume24h)} vol</span>
+          {/* Sparkline + Change */}
+          {question.trendData && question.trendData.length >= 2 && (
+            <div className="flex items-center gap-2 mb-3">
+              <SparklineChart
+                data={question.trendData}
+                width={80}
+                height={24}
+                positive={changePositive}
+              />
+              {question.changePercent !== undefined && (
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    'text-[10px] font-bold border-0 gap-0.5 px-1.5 py-0',
+                    changePositive
+                      ? 'bg-emerald-500/10 text-emerald-400'
+                      : 'bg-red-500/10 text-red-400'
+                  )}
+                >
+                  {changePositive ? <TrendingUp size={9} /> : <TrendingDown size={9} />}
+                  {changePositive ? '+' : ''}{question.changePercent.toFixed(1)}%
+                </Badge>
+              )}
             </div>
           )}
 
-          {/* ---- Vote buttons / Results ---- */}
-          <div className="space-y-1.5 mb-4 flex-1">
+          {/* ── Vote buttons / Results (compact) ── */}
+          <div className="space-y-1.5 mb-3 flex-1">
             <AnimatePresence mode="wait">
-              {localOptions.map((option) => {
+              {localOptions.slice(0, 3).map((option) => {
                 const isVoted = voted === option.id;
+                const isLeading = option.id === leading?.id;
                 return (
                   <motion.button
                     key={option.id}
@@ -231,17 +243,20 @@ export default function QuestionCard({ question }: { question: Question }) {
                     onClick={() => handleVote(option.id)}
                     disabled={!!voted}
                     className={cn(
-                      'relative w-full flex items-center justify-between rounded-xl text-left text-[13px] font-semibold transition-all overflow-hidden',
-                      showResults ? 'px-3.5 py-2.5' : 'px-3.5 py-2.5',
+                      'relative w-full rounded-lg text-left text-[12px] font-medium transition-all overflow-hidden',
+                      showResults ? 'px-2.5 py-1.5' : 'px-2.5 py-1.5',
                       !showResults && [
                         'border border-white/[0.08] bg-white/[0.03] cursor-pointer',
                         'hover:bg-white/[0.07] hover:border-white/[0.15]',
-                        'hover:shadow-[0_0_15px_-3px] hover:shadow-indigo-500/20',
                         'active:scale-[0.98]',
                       ],
                       showResults && [
                         'border bg-card/60 cursor-default',
-                        isVoted ? 'border-white/20' : 'border-white/[0.05] opacity-70',
+                        isVoted
+                          ? 'border-white/20'
+                          : isLeading
+                            ? 'bg-indigo-500/5 ring-1 ring-indigo-500/20 border-transparent'
+                            : 'border-white/[0.05] opacity-70',
                       ],
                     )}
                     style={{
@@ -253,58 +268,84 @@ export default function QuestionCard({ question }: { question: Question }) {
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${option.percentage}%` }}
-                        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className="absolute inset-y-0 left-0 rounded-xl"
+                        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+                        className="absolute inset-y-0 left-0 rounded-lg"
                         style={{ background: `${option.color}18` }}
                       />
                     )}
 
-                    <span className="relative z-10 flex items-center gap-2">
-                      {/* Color dot */}
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: option.color }}
-                      />
-                      <span className="line-clamp-1">{option.text}</span>
-                      {isVoted && showResults && (
-                        <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
-                      )}
-                    </span>
+                    <div className="relative z-10 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ background: option.color }}
+                        />
+                        <span className="truncate">{option.text}</span>
+                        {isVoted && showResults && (
+                          <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                        )}
+                      </span>
 
-                    {showResults ? (
-                      <span
-                        className="relative z-10 font-black text-sm tabular-nums"
-                        style={{ color: option.color }}
-                      >
-                        {option.percentage}%
-                      </span>
-                    ) : (
-                      <span className="relative z-10 text-[11px] text-muted-foreground font-normal">
-                        {formatNumber(option.votes)}
-                      </span>
+                      {showResults ? (
+                        <span
+                          className="font-bold text-[11px] tabular-nums shrink-0 ml-2"
+                          style={{ color: option.color }}
+                        >
+                          {option.percentage}%
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground font-normal shrink-0 ml-2">
+                          {formatNumber(option.votes)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Mini progress bar under option */}
+                    {showResults && (
+                      <div className="mt-1 h-[3px] bg-secondary/60 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${option.percentage}%` }}
+                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                          className={cn(
+                            'h-full rounded-full',
+                            isLeading
+                              ? 'bg-gradient-to-r from-indigo-500 to-indigo-400'
+                              : 'bg-muted-foreground/25'
+                          )}
+                        />
+                      </div>
                     )}
                   </motion.button>
                 );
               })}
             </AnimatePresence>
+            {localOptions.length > 3 && (
+              <p className="text-[10px] text-muted-foreground text-center">
+                +{localOptions.length - 3} more options
+              </p>
+            )}
           </div>
 
-          {/* ---- Footer ---- */}
+          {/* ── Footer ── */}
           <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.06]">
-            <div className="flex items-center gap-3.5 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1 font-semibold">
-                <Users size={12} />
+                <Users size={10} />
                 {formatNumber(localTotal)}
               </span>
               <span className="flex items-center gap-1">
-                <MessageSquare size={12} />
+                <MessageSquare size={10} />
                 {question.totalComments}
               </span>
-              <span className="text-muted-foreground/50">
-                {timeAgo(question.createdAt)}
-              </span>
+              {question.volume24h !== undefined && question.volume24h > 0 && (
+                <span className="flex items-center gap-1">
+                  <Activity size={10} />
+                  {formatNumber(question.volume24h)}
+                </span>
+              )}
               <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                <DollarSign size={11} />
+                <DollarSign size={10} />
                 Earn
               </span>
             </div>
@@ -312,11 +353,11 @@ export default function QuestionCard({ question }: { question: Question }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 hover:bg-white/[0.06]"
+                className="h-6 w-6 hover:bg-white/[0.06]"
                 onClick={() => setBookmarked(!bookmarked)}
               >
                 <Bookmark
-                  size={13}
+                  size={11}
                   fill={bookmarked ? '#f59e0b' : 'none'}
                   className={cn(
                     'transition-colors',
@@ -327,10 +368,10 @@ export default function QuestionCard({ question }: { question: Question }) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 hover:bg-white/[0.06]"
+                className="h-6 w-6 hover:bg-white/[0.06]"
                 onClick={() => setShowShare(true)}
               >
-                <Share2 size={13} className="text-muted-foreground" />
+                <Share2 size={11} className="text-muted-foreground" />
               </Button>
             </div>
           </div>
