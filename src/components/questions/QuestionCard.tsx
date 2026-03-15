@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
@@ -14,6 +13,7 @@ import {
   Activity,
   Sparkles,
   CheckCircle2,
+  DollarSign,
 } from 'lucide-react';
 import type { Question, QuestionCategory } from '@/types';
 import { formatNumber, timeAgo, cn } from '@/lib/utils';
@@ -104,12 +104,10 @@ export default function QuestionCard({ question }: { question: Question }) {
         <div className="relative w-full md:w-[40%] min-h-[180px] md:min-h-[260px] shrink-0 overflow-hidden">
           {/* Image or gradient placeholder */}
           {question.image ? (
-            <Image
+            <img
               src={question.image}
               alt={question.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 40vw"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div
@@ -304,6 +302,10 @@ export default function QuestionCard({ question }: { question: Question }) {
               </span>
               <span className="text-muted-foreground/50">
                 {timeAgo(question.createdAt)}
+              </span>
+              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                <DollarSign size={11} />
+                Earn
               </span>
             </div>
             <div className="flex items-center gap-0.5">

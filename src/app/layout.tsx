@@ -27,7 +27,7 @@ export default function RootLayout({
         <AuthProvider>
           <Navbar />
           <Sidebar />
-          <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] p-4 lg:p-6 relative z-[1]">
+          <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] px-3 py-4 lg:px-5 lg:py-5 relative z-[1]">
             {children}
           </main>
         </AuthProvider>

@@ -42,7 +42,7 @@ export default function PredictionsPage() {
       : mockPredictions.filter((p) => p.category === filter);
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 py-6">
+    <div className="max-w-full mx-auto px-4 py-6">
       {/* ───── Header ───── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
