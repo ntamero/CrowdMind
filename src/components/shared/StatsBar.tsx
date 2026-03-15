@@ -15,48 +15,44 @@ const stats = [
 
 export default function StatsBar() {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-        gap: 12,
-        marginBottom: 28,
-      }}
-    >
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gap: 12,
+      marginBottom: 32,
+    }}>
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.label}
-            className="glass-card"
+            className="glass-card stat-card"
             style={{
-              padding: '18px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
+              display: 'flex', alignItems: 'center', gap: 12,
+              position: 'relative', overflow: 'hidden',
             }}
           >
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 12,
-                background: `${stat.color}18`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Icon size={20} color={stat.color} />
+            {/* Subtle glow */}
+            <div style={{
+              position: 'absolute', top: -20, right: -20,
+              width: 60, height: 60, borderRadius: '50%',
+              background: `radial-gradient(circle, ${stat.color}15, transparent)`,
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: `${stat.color}10`,
+              border: `1px solid ${stat.color}20`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Icon size={18} color={stat.color} />
             </div>
             <div>
-              <div
-                className="stat-value"
-                style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.2 }}
-              >
+              <div className="stat-value" style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.2, letterSpacing: -0.5 }}>
                 {formatNumber(stat.value)}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, letterSpacing: 0.3 }}>
                 {stat.label}
               </div>
             </div>

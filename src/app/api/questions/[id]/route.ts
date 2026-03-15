@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockQuestions } from '@/lib/mock-data';
+import { getQuestionById } from '@/lib/database';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  const question = mockQuestions.find((q) => q.id === id);
-  if (!question) {
-    return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+  try {
+    const { id } = await params;
+    const question = await getQuestionById(id);
+    if (!question) {
+      return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+    return NextResponse.json(question);
+  } catch (error) {
+    console.error('[API /questions/[id] GET]', error);
+    return NextResponse.json({ error: 'Failed to fetch question' }, { status: 500 });
   }
-  return NextResponse.json(question);
 }

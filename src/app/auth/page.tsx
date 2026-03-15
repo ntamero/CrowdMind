@@ -2,21 +2,41 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brain, Mail, Lock, User, Eye, EyeOff, ArrowRight, Chrome, Github } from 'lucide-react';
+import { Brain, Mail, Lock, User, Eye, EyeOff, ArrowRight, Chrome, Github, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 type AuthMode = 'login' | 'register';
 
 export default function AuthPage() {
   const router = useRouter();
+  const { signInWithGoogle, signInWithGithub, signInWithEmail, signUpWithEmail } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    setError(null);
+
+    if (mode === 'login') {
+      const { error } = await signInWithEmail(form.email, form.password);
+      if (error) {
+        setError(error);
+        setLoading(false);
+        return;
+      }
+    } else {
+      const { error } = await signUpWithEmail(form.email, form.password, form.name);
+      if (error) {
+        setError(error);
+        setLoading(false);
+        return;
+      }
+    }
+
     router.push('/');
   };
 
@@ -45,20 +65,38 @@ export default function AuthPage() {
         </div>
 
         <div className="glass-card" style={{ padding: 32 }}>
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '12px 16px', borderRadius: 10, marginBottom: 16,
+              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)',
+              color: '#ef4444', fontSize: 13,
+            }}>
+              <AlertCircle size={16} /> {error}
+            </div>
+          )}
+
           {/* OAuth Buttons */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-            <button style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              padding: '14px', borderRadius: 12, background: 'white', color: '#333',
-              border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-            }}>
+            <button
+              onClick={signInWithGoogle}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                padding: '14px', borderRadius: 12, background: 'white', color: '#333',
+                border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+              }}
+            >
               <Chrome size={20} /> Continue with Google
             </button>
-            <button style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              padding: '14px', borderRadius: 12, background: '#24292e', color: 'white',
-              border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
-            }}>
+            <button
+              onClick={signInWithGithub}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                padding: '14px', borderRadius: 12, background: '#24292e', color: 'white',
+                border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+              }}
+            >
               <Github size={20} /> Continue with GitHub
             </button>
           </div>
@@ -109,6 +147,7 @@ export default function AuthPage() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 style={{ paddingLeft: 42, paddingRight: 42 }}
                 required
+                minLength={6}
               />
               <button
                 type="button"
@@ -137,6 +176,7 @@ export default function AuthPage() {
               style={{
                 width: '100%', padding: '14px', fontSize: 15,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                opacity: loading ? 0.7 : 1,
               }}
             >
               {loading ? 'Please wait...' : (
@@ -152,7 +192,7 @@ export default function AuthPage() {
           <div style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--text-secondary)' }}>
             {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
             <button
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+              onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); }}
               style={{
                 background: 'none', border: 'none', color: 'var(--primary-light)',
                 fontWeight: 600, cursor: 'pointer', fontSize: 14,
