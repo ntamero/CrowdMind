@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { X, Link2, Check, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -10,21 +12,30 @@ interface ShareModalProps {
   url: string;
 }
 
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 20 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, damping: 25, stiffness: 300 } },
+  exit: { opacity: 0, scale: 0.95, y: 20, transition: { duration: 0.15 } },
+};
+
 export default function ShareModal({ isOpen, onClose, title, url }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
-
-  if (!isOpen) return null;
 
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}${url}` : url;
   const encodedTitle = encodeURIComponent(title);
   const encodedUrl = encodeURIComponent(shareUrl);
 
   const platforms = [
-    { name: 'Twitter / X', icon: '𝕏', color: '#000', url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
-    { name: 'WhatsApp', icon: <MessageCircle size={20} />, color: '#25D366', url: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` },
-    { name: 'LinkedIn', icon: 'in', color: '#0A66C2', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
-    { name: 'Reddit', icon: 'R', color: '#FF4500', url: `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}` },
-    { name: 'Telegram', icon: '✈', color: '#0088cc', url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}` },
+    { name: 'Twitter / X', icon: '𝕏', color: 'text-black dark:text-white', bg: 'bg-black/10 dark:bg-white/10', url: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}` },
+    { name: 'WhatsApp', icon: <MessageCircle size={20} />, color: 'text-green-500', bg: 'bg-green-500/10', url: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}` },
+    { name: 'LinkedIn', icon: 'in', color: 'text-blue-600', bg: 'bg-blue-600/10', url: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: 'Reddit', icon: 'R', color: 'text-orange-500', bg: 'bg-orange-500/10', url: `https://reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}` },
+    { name: 'Telegram', icon: '✈', color: 'text-sky-500', bg: 'bg-sky-500/10', url: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}` },
   ];
 
   const copyLink = () => {
@@ -34,85 +45,72 @@ export default function ShareModal({ isOpen, onClose, title, url }: ShareModalPr
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-        backdropFilter: 'blur(4px)',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="glass-card"
-        style={{ padding: 28, width: 420, maxWidth: '90vw' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700 }}>Share this question</h3>
-          <button
-            onClick={onClose}
-            style={{
-              width: 32, height: 32, borderRadius: 8, background: 'var(--bg-card)',
-              border: '1px solid var(--border)', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)',
-            }}
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          variants={overlayVariants}
+          initial="hidden"
+          animate="visible"
+          exit="hidden"
+          onClick={onClose}
+        >
+          <motion.div
+            className="w-[420px] max-w-[90vw] rounded-2xl border border-border bg-card p-7 shadow-xl"
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X size={16} />
-          </button>
-        </div>
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground">Share this question</h3>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onClose}
+                className="size-8 rounded-lg"
+              >
+                <X size={16} />
+              </Button>
+            </div>
 
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20, lineHeight: 1.4 }}>
-          &quot;{title}&quot;
-        </p>
+            <p className="mb-5 text-sm leading-relaxed text-muted-foreground">
+              &quot;{title}&quot;
+            </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 20 }}>
-          {platforms.map((p) => (
-            <a
-              key={p.name}
-              href={p.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                padding: 12, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)',
-                textDecoration: 'none', color: 'var(--text-primary)', fontSize: 11, transition: 'all 0.2s',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{
-                width: 40, height: 40, borderRadius: 10, background: `${p.color}20`, display: 'flex',
-                alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: p.color,
-              }}>
-                {p.icon}
+            <div className="mb-5 grid grid-cols-5 gap-2.5">
+              {platforms.map((p) => (
+                <a
+                  key={p.name}
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-border bg-card p-3 text-[11px] text-foreground no-underline transition-all hover:border-primary/30 hover:bg-muted"
+                >
+                  <div className={`flex size-10 items-center justify-center rounded-[10px] text-lg font-bold ${p.bg} ${p.color}`}>
+                    {p.icon}
+                  </div>
+                  {p.name}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <div className="flex-1 truncate rounded-[10px] border border-border bg-input/30 px-3.5 py-2.5 text-[13px] text-muted-foreground">
+                {shareUrl}
               </div>
-              {p.name}
-            </a>
-          ))}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{
-            flex: 1, padding: '10px 14px', borderRadius: 10, background: 'var(--bg-input)',
-            border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-muted)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {shareUrl}
-          </div>
-          <button
-            onClick={copyLink}
-            className="btn-glow"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13, flexShrink: 0 }}
-          >
-            {copied ? <Check size={16} /> : <Link2 size={16} />}
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
-      </div>
-    </div>
+              <Button
+                onClick={copyLink}
+                className="flex shrink-0 items-center gap-1.5"
+              >
+                {copied ? <Check size={16} /> : <Link2 size={16} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

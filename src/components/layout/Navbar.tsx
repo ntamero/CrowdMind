@@ -1,235 +1,226 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Brain, Search, Plus, Menu, X,
-  TrendingUp, Trophy, User, Settings, Zap, LogOut, Crown,
+  Brain, Search, Plus, Menu, TrendingUp, Trophy, Zap,
+  User, Settings, Crown, LogOut, Bell, X,
 } from 'lucide-react';
-import NotificationDropdown from '@/components/shared/NotificationDropdown';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/supabase/auth-context';
+
+const navLinks = [
+  { href: '/', icon: TrendingUp, label: 'Markets' },
+  { href: '/predictions', icon: Zap, label: 'Predict' },
+  { href: '/leaderboard', icon: Trophy, label: 'Ranks' },
+];
 
 export default function Navbar() {
   const { user, profile, loading, signOut } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [dropdownOpen]);
 
   return (
-    <nav
-      style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        background: 'rgba(10, 10, 26, 0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--glass-border)',
-      }}
-    >
-      <div
-        className="container"
-        style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 70,
-        }}
-      >
+    <nav className="fixed top-0 left-0 right-0 z-50 h-14 bg-[#0a0a14]/90 backdrop-blur-xl border-b border-border/50">
+      <div className="container h-full flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: 'var(--text-primary)' }}>
-          <div style={{
-            width: 40, height: 40, borderRadius: 12, background: 'var(--gradient-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Brain size={22} color="white" />
+        <Link href="/" className="flex items-center gap-2.5 no-underline shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <Brain size={18} className="text-white" />
           </div>
-          <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: -0.5 }}>
-            Crowd<span style={{ color: 'var(--primary-light)' }}>Mind</span>
+          <span className="text-lg font-bold tracking-tight hidden sm:block">
+            Crowd<span className="text-indigo-400">Mind</span>
           </span>
         </Link>
 
-        {/* Search Bar */}
-        <div style={{ position: 'relative', flex: '0 1 420px', display: 'flex', alignItems: 'center' }} className="hidden-mobile">
-          <Search size={18} style={{ position: 'absolute', left: 14, color: searchFocused ? 'var(--primary)' : 'var(--text-muted)', transition: 'color 0.3s' }} />
-          <input
-            type="text"
-            placeholder="Search questions, predictions, users..."
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            style={{ paddingLeft: 42, borderRadius: 12, height: 42, fontSize: 14 }}
+        {/* Search */}
+        <div className="hidden md:flex flex-1 max-w-md relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search markets..."
+            className="pl-9 h-9 bg-secondary/50 border-border/50 text-sm"
           />
         </div>
 
-        {/* Nav Links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} className="hidden-mobile">
-          <NavLink href="/" icon={<TrendingUp size={18} />} label="Explore" />
-          <NavLink href="/predictions" icon={<Zap size={18} />} label="Predict" />
-          <NavLink href="/leaderboard" icon={<Trophy size={18} />} label="Ranks" />
+        {/* Nav links */}
+        <div className="hidden md:flex items-center gap-1">
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-1.5 text-[13px]">
+                <link.icon size={15} />
+                {link.label}
+              </Button>
+            </Link>
+          ))}
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Link href="/ask" style={{ textDecoration: 'none' }}>
-            <button className="btn-glow" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px' }}>
-              <Plus size={18} />
-              <span className="hidden-mobile">Ask</span>
-            </button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSearchOpen(!searchOpen)}>
+            <Search size={16} />
+          </Button>
+
+          <Link href="/ask">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 h-8 px-3 text-[13px] font-semibold">
+              <Plus size={14} />
+              <span className="hidden sm:inline">Ask</span>
+            </Button>
           </Link>
 
-          {!loading && user && <NotificationDropdown />}
+          {!loading && user && (
+            <Button variant="ghost" size="icon" className="h-8 w-8 relative">
+              <Bell size={16} />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
+            </Button>
+          )}
 
-          {/* Auth State */}
           {loading ? (
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-            }} />
+            <div className="w-8 h-8 rounded-lg bg-secondary animate-pulse" />
           ) : user ? (
-            <div style={{ position: 'relative' }}>
-              <div
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                style={{
-                  width: 40, height: 40, borderRadius: 10, overflow: 'hidden',
-                  cursor: 'pointer', border: '2px solid var(--primary)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'var(--gradient-primary)',
-                }}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-8 h-8 rounded-lg overflow-hidden border border-border/50 hover:border-indigo-500/50 transition-colors cursor-pointer"
               >
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <User size={18} color="white" />
+                  <div className="w-full h-full bg-indigo-600 flex items-center justify-center">
+                    <User size={14} className="text-white" />
+                  </div>
                 )}
-              </div>
+              </button>
 
-              {/* User Dropdown */}
-              {userMenuOpen && (
-                <>
-                  <div
-                    style={{ position: 'fixed', inset: 0, zIndex: 98 }}
-                    onClick={() => setUserMenuOpen(false)}
-                  />
-                  <div style={{
-                    position: 'absolute', top: 50, right: 0, width: 240,
-                    background: 'var(--bg-secondary)', border: '1px solid var(--border)',
-                    borderRadius: 14, padding: 8, zIndex: 99,
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                  }}>
-                    <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', marginBottom: 6 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700 }}>{profile?.display_name || 'User'}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>@{profile?.username || 'user'}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                        <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary-light)', fontSize: 10 }}>
-                          Level {profile?.level || 1}
-                        </span>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                          {profile?.xp || 0} XP
-                        </span>
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.1 }}
+                    className="absolute right-0 top-full mt-1.5 w-56 rounded-xl bg-[#141420] border border-border/50 shadow-xl z-50 overflow-hidden"
+                  >
+                    <div className="px-3 py-2.5">
+                      <p className="text-sm font-semibold">{profile?.display_name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground">@{profile?.username || 'user'}</p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Lv.{profile?.level || 1}</Badge>
+                        <span className="text-[10px] text-muted-foreground">{profile?.xp || 0} XP</span>
                       </div>
                     </div>
-                    <DropdownLink href="/profile" icon={<User size={16} />} label="Profile" onClick={() => setUserMenuOpen(false)} />
-                    <DropdownLink href="/settings" icon={<Settings size={16} />} label="Settings" onClick={() => setUserMenuOpen(false)} />
-                    <DropdownLink href="/pricing" icon={<Crown size={16} />} label="Go Premium" onClick={() => setUserMenuOpen(false)} />
-                    <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
-                    <button
-                      onClick={async () => { setUserMenuOpen(false); await signOut(); }}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10, width: '100%',
-                        padding: '10px 14px', borderRadius: 8, border: 'none',
-                        background: 'transparent', color: '#ef4444',
-                        fontSize: 13, fontWeight: 500, cursor: 'pointer', textAlign: 'left',
-                      }}
-                    >
-                      <LogOut size={16} /> Sign Out
-                    </button>
-                  </div>
-                </>
-              )}
+                    <div className="h-px bg-border/50" />
+                    <div className="p-1">
+                      <Link href="/profile" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <User size={14} /> Profile
+                      </Link>
+                      <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <Settings size={14} /> Settings
+                      </Link>
+                      <Link href="/pricing" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <Crown size={14} /> Premium
+                      </Link>
+                    </div>
+                    <div className="h-px bg-border/50" />
+                    <div className="p-1">
+                      <button
+                        onClick={() => { setDropdownOpen(false); signOut(); }}
+                        className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors text-red-400 w-full cursor-pointer"
+                      >
+                        <LogOut size={14} /> Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
-            <Link href="/auth" style={{ textDecoration: 'none' }}>
-              <button className="btn-secondary" style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', fontSize: 13,
-              }}>
-                <User size={16} /> Sign In
-              </button>
+            <Link href="/auth">
+              <Button variant="outline" size="sm" className="h-8 text-[13px] gap-1.5 border-border/50">
+                Sign In
+              </Button>
             </Link>
           )}
 
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            style={{
-              display: 'none', width: 40, height: 40, borderRadius: 10,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', color: 'var(--text-primary)',
-            }}
-            className="mobile-menu-btn"
-          >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          {/* Mobile menu button */}
+          <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMenuOpen(true)}>
+            <Menu size={16} />
+          </Button>
         </div>
       </div>
 
-      {/* Mobile dropdown */}
-      {mobileOpen && (
-        <div style={{
-          background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)',
-          padding: 20, display: 'flex', flexDirection: 'column', gap: 8,
-        }}>
-          <input type="text" placeholder="Search..." style={{ marginBottom: 8 }} />
-          <MobileLink href="/" icon={<TrendingUp size={18} />} label="Explore" onClick={() => setMobileOpen(false)} />
-          <MobileLink href="/predictions" icon={<Zap size={18} />} label="Predictions" onClick={() => setMobileOpen(false)} />
-          <MobileLink href="/leaderboard" icon={<Trophy size={18} />} label="Leaderboard" onClick={() => setMobileOpen(false)} />
-          <MobileLink href="/profile" icon={<User size={18} />} label="Profile" onClick={() => setMobileOpen(false)} />
-          <MobileLink href="/admin" icon={<Settings size={18} />} label="Admin" onClick={() => setMobileOpen(false)} />
-        </div>
-      )}
+      {/* Mobile search */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="md:hidden border-t border-border/50 bg-[#0a0a14] overflow-hidden"
+          >
+            <div className="p-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search markets..." className="pl-9 h-9 bg-secondary/50 border-border/50" autoFocus />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .mobile-menu-btn { display: flex !important; }
-        }
-      `}</style>
+      {/* Mobile side menu */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 w-64 bg-[#0c0c18] border-l border-border/50 z-50 p-4"
+            >
+              <div className="flex justify-end mb-4">
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setMenuOpen(false)}>
+                  <X size={16} />
+                </Button>
+              </div>
+              <div className="flex flex-col gap-1">
+                {navLinks.map((link) => (
+                  <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground">
+                      <link.icon size={18} /> {link.label}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
-  );
-}
-
-function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
-  return (
-    <Link
-      href={href}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-        borderRadius: 10, color: 'var(--text-secondary)', textDecoration: 'none',
-        fontSize: 14, fontWeight: 500, transition: 'all 0.2s',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
-    >
-      {icon} {label}
-    </Link>
-  );
-}
-
-function DropdownLink({ href, icon, label, onClick }: { href: string; icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <Link href={href} onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-      borderRadius: 8, color: 'var(--text-secondary)', textDecoration: 'none',
-      fontSize: 13, fontWeight: 500, transition: 'all 0.2s',
-    }}>
-      {icon} {label}
-    </Link>
-  );
-}
-
-function MobileLink({ href, icon, label, onClick }: { href: string; icon: React.ReactNode; label: string; onClick: () => void }) {
-  return (
-    <Link href={href} onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
-      borderRadius: 10, color: 'var(--text-secondary)', textDecoration: 'none',
-      fontSize: 15, fontWeight: 500,
-    }}>
-      {icon} {label}
-    </Link>
   );
 }

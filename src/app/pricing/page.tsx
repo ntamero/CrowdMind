@@ -1,131 +1,152 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { Check, Crown, Zap, Building2, Sparkles, ArrowRight, Shield, Star } from 'lucide-react';
 import { mockPricingPlans } from '@/lib/mock-data';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function PricingPage() {
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '20px 0' }}>
+    <div className="mx-auto max-w-[1000px] py-5">
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '8px 18px', borderRadius: 30,
-          background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.2)',
-          marginBottom: 20, fontSize: 13, fontWeight: 600, color: '#fbbf24',
-        }}>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mb-12 text-center"
+      >
+        <Badge className="mb-5 gap-1.5 border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-[13px] font-semibold text-amber-400">
           <Crown size={14} /> Premium Plans
-        </div>
-        <h1 style={{ fontSize: 42, fontWeight: 900, marginBottom: 12, letterSpacing: -1 }}>
+        </Badge>
+        <h1 className="mb-3 text-[42px] font-black leading-tight tracking-tight text-foreground">
           Unlock{' '}
-          <span style={{
-            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>
+          <span className="bg-gradient-to-br from-amber-500 to-red-500 bg-clip-text text-transparent">
             Full Power
           </span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 17, maxWidth: 500, margin: '0 auto' }}>
+        <p className="mx-auto max-w-[500px] text-[17px] text-muted-foreground">
           Get deeper AI insights, unlimited questions, and premium analytics to make better decisions.
         </p>
-      </div>
+      </motion.div>
 
       {/* Plans */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 48 }}>
-        {mockPricingPlans.map((plan) => {
+      <div className="mb-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+        {mockPricingPlans.map((plan, index) => {
           const icons: Record<string, React.ReactNode> = {
-            free: <Zap size={28} color="#64748b" />,
-            pro: <Crown size={28} color="#f59e0b" />,
-            enterprise: <Building2 size={28} color="#6366f1" />,
+            free: <Zap size={28} className="text-slate-500" />,
+            pro: <Crown size={28} className="text-amber-500" />,
+            enterprise: <Building2 size={28} className="text-indigo-500" />,
           };
           return (
-            <div
+            <motion.div
               key={plan.id}
-              className="glass-card"
-              style={{
-                padding: 32,
-                position: 'relative',
-                border: plan.highlighted ? '2px solid rgba(245, 158, 11, 0.4)' : undefined,
-                transform: plan.highlighted ? 'scale(1.03)' : undefined,
-              }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className={`relative rounded-xl border bg-card/50 p-8 ${
+                plan.highlighted
+                  ? 'scale-[1.03] border-2 border-amber-500/40 shadow-lg shadow-amber-500/10'
+                  : 'border-border/30'
+              }`}
             >
               {plan.badge && (
-                <div style={{
-                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-                  padding: '6px 16px', borderRadius: 20,
-                  background: plan.id === 'pro' ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : 'var(--gradient-primary)',
-                  fontSize: 11, fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: 0.5,
-                }}>
+                <div
+                  className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white ${
+                    plan.id === 'pro'
+                      ? 'bg-gradient-to-r from-amber-500 to-red-500'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-600'
+                  }`}
+                >
                   {plan.badge}
                 </div>
               )}
 
-              <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: 16, margin: '0 auto 12px',
-                  background: plan.highlighted ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-card)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
+              <div className="mb-6 text-center">
+                <div
+                  className={`mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl ${
+                    plan.highlighted ? 'bg-amber-500/10' : 'bg-card'
+                  }`}
+                >
                   {icons[plan.id]}
                 </div>
-                <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>{plan.name}</h3>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 2 }}>
-                  <span style={{ fontSize: 42, fontWeight: 900, color: plan.highlighted ? '#fbbf24' : 'var(--text-primary)' }}>
+                <h3 className="mb-2 text-[22px] font-extrabold text-foreground">{plan.name}</h3>
+                <div className="flex items-baseline justify-center gap-0.5">
+                  <span
+                    className={`text-[42px] font-black ${
+                      plan.highlighted ? 'text-amber-400' : 'text-foreground'
+                    }`}
+                  >
                     ${plan.price}
                   </span>
                   {plan.price > 0 && (
-                    <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>/mo</span>
+                    <span className="text-sm text-muted-foreground">/mo</span>
                   )}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
+              <div className="mb-7 flex flex-col gap-2.5">
                 {plan.features.map((feature) => (
-                  <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-                    <Check size={16} color={plan.highlighted ? '#f59e0b' : '#10b981'} />
-                    <span style={{ color: 'var(--text-secondary)' }}>{feature}</span>
+                  <div key={feature} className="flex items-center gap-2.5 text-sm">
+                    <Check
+                      size={16}
+                      className={plan.highlighted ? 'text-amber-500' : 'text-emerald-500'}
+                    />
+                    <span className="text-muted-foreground">{feature}</span>
                   </div>
                 ))}
               </div>
 
-              <button
-                className={plan.highlighted ? 'btn-glow' : 'btn-secondary'}
-                style={{
-                  width: '100%', padding: '14px', fontSize: 15,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  background: plan.highlighted ? 'linear-gradient(135deg, #f59e0b, #ef4444)' : undefined,
-                }}
-              >
-                {plan.price === 0 ? 'Get Started Free' : 'Upgrade Now'}
-                <ArrowRight size={18} />
-              </button>
-            </div>
+              {plan.highlighted ? (
+                <Button
+                  className="flex h-12 w-full items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-red-500 text-[15px] font-semibold text-white hover:from-amber-600 hover:to-red-600"
+                >
+                  Upgrade Now
+                  <ArrowRight size={18} />
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="flex h-12 w-full items-center justify-center gap-2 text-[15px]"
+                >
+                  {plan.price === 0 ? 'Get Started Free' : 'Upgrade Now'}
+                  <ArrowRight size={18} />
+                </Button>
+              )}
+            </motion.div>
           );
         })}
       </div>
 
       {/* Trust badges */}
-      <div style={{
-        display: 'flex', justifyContent: 'center', gap: 32, marginBottom: 32,
-        flexWrap: 'wrap',
-      }}>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mb-8 flex flex-wrap justify-center gap-8"
+      >
         {[
-          { icon: <Shield size={18} color="#10b981" />, text: 'Secure payments' },
-          { icon: <Star size={18} color="#f59e0b" />, text: '7-day free trial' },
-          { icon: <Sparkles size={18} color="#6366f1" />, text: 'Cancel anytime' },
+          { icon: <Shield size={18} className="text-emerald-500" />, text: 'Secure payments' },
+          { icon: <Star size={18} className="text-amber-500" />, text: '7-day free trial' },
+          { icon: <Sparkles size={18} className="text-indigo-500" />, text: 'Cancel anytime' },
         ].map((item) => (
-          <div key={item.text} style={{
-            display: 'flex', alignItems: 'center', gap: 8, fontSize: 14,
-            color: 'var(--text-secondary)',
-          }}>
+          <div
+            key={item.text}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
             {item.icon} {item.text}
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* FAQ */}
-      <div className="glass-card" style={{ padding: 32, maxWidth: 700, margin: '0 auto' }}>
-        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, textAlign: 'center' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="mx-auto max-w-[700px] rounded-xl border border-border/30 bg-card/50 p-8"
+      >
+        <h3 className="mb-5 text-center text-[22px] font-bold text-foreground">
           Frequently Asked Questions
         </h3>
         {[
@@ -134,12 +155,12 @@ export default function PricingPage() {
           { q: 'What payment methods do you accept?', a: 'We accept all major credit cards, PayPal, and crypto payments (BTC, ETH).' },
           { q: 'Can I switch plans?', a: 'Absolutely. You can upgrade or downgrade your plan at any time. Changes take effect at the next billing cycle.' },
         ].map((faq) => (
-          <div key={faq.q} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{faq.q}</div>
-            <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{faq.a}</div>
+          <div key={faq.q} className="mb-4 border-b border-border pb-4 last:mb-0 last:border-b-0 last:pb-0">
+            <div className="mb-1.5 text-[15px] font-semibold text-foreground">{faq.q}</div>
+            <div className="text-sm leading-relaxed text-muted-foreground">{faq.a}</div>
           </div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 }

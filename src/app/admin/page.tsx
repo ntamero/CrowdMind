@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import {
   Settings,
   Users,
@@ -17,6 +18,8 @@ import {
 } from 'lucide-react';
 import { mockStats, mockQuestions, mockUsers } from '@/lib/mock-data';
 import { formatNumber, timeAgo } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function AdminPage() {
   const dashboardStats = [
@@ -28,225 +31,169 @@ export default function AdminPage() {
     { icon: Activity, label: 'Today', value: mockStats.questionsToday.toString(), change: '+15.4%', color: '#ef4444', positive: true },
   ];
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.05, duration: 0.3, ease: 'easeOut' as const },
+    }),
+  };
+
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 0' }}>
+    <div className="mx-auto max-w-[1100px] py-5">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="mb-7 flex items-center justify-between"
+      >
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Shield size={28} color="var(--primary)" /> Admin Dashboard
+          <h1 className="flex items-center gap-2.5 text-[28px] font-extrabold text-foreground">
+            <Shield size={28} className="text-primary" /> Admin Dashboard
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>
+          <p className="mt-1 text-sm text-muted-foreground">
             Platform analytics and management
           </p>
         </div>
-        <button className="btn-glow" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Button className="flex items-center gap-2">
           <Settings size={18} /> Settings
-        </button>
-      </div>
+        </Button>
+      </motion.div>
 
       {/* Stats */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
-        {dashboardStats.map((stat) => {
+      <div className="mb-7 grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3">
+        {dashboardStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <div key={stat.label} className="glass-card" style={{ padding: 18 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <motion.div
+              key={stat.label}
+              custom={i}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              className="rounded-xl border border-border/30 bg-card/50 p-[18px]"
+            >
+              <div className="mb-3 flex items-center justify-between">
                 <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    background: `${stat.color}18`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  className="flex h-10 w-10 items-center justify-center rounded-[10px]"
+                  style={{ background: `${stat.color}18` }}
                 >
-                  <Icon size={20} color={stat.color} />
+                  <Icon size={20} style={{ color: stat.color }} />
                 </div>
                 <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: stat.positive ? '#10b981' : '#ef4444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                  }}
+                  className={`flex items-center gap-0.5 text-xs font-semibold ${
+                    stat.positive ? 'text-emerald-500' : 'text-red-500'
+                  }`}
                 >
                   <TrendingUp size={12} /> {stat.change}
                 </span>
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800 }}>{stat.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{stat.label}</div>
-            </div>
+              <div className="text-2xl font-extrabold text-foreground">{stat.value}</div>
+              <div className="text-xs text-muted-foreground">{stat.label}</div>
+            </motion.div>
           );
         })}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="grid grid-cols-2 gap-5">
         {/* Recent Questions */}
-        <div className="glass-card" style={{ padding: 24 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MessageSquare size={18} color="var(--primary-light)" /> Recent Questions
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="rounded-xl border border-border/30 bg-card/50 p-6"
+        >
+          <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+            <MessageSquare size={18} className="text-primary" /> Recent Questions
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {mockQuestions.slice(0, 5).map((q) => (
               <div
                 key={q.id}
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
+                className="flex items-center justify-between rounded-[10px] border border-border bg-card px-3.5 py-3"
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-semibold text-foreground">
                     {q.title}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  <div className="text-[11px] text-muted-foreground">
                     {q.user.displayName} · {formatNumber(q.totalVotes)} votes · {timeAgo(q.createdAt)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
-                  <button
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 6,
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <CheckCircle size={14} color="#10b981" />
+                <div className="ml-2 flex gap-1.5">
+                  <button className="flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-emerald-500/10 transition-colors hover:bg-emerald-500/20">
+                    <CheckCircle size={14} className="text-emerald-500" />
                   </button>
-                  <button
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: 6,
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Trash2 size={14} color="#ef4444" />
+                  <button className="flex h-[30px] w-[30px] items-center justify-center rounded-md border-none bg-red-500/10 transition-colors hover:bg-red-500/20">
+                    <Trash2 size={14} className="text-red-500" />
                   </button>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* User Management */}
-        <div className="glass-card" style={{ padding: 24 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Users size={18} color="var(--accent)" /> Users
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+          className="rounded-xl border border-border/30 bg-card/50 p-6"
+        >
+          <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+            <Users size={18} className="text-accent-foreground" /> Users
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {mockUsers.map((user) => (
               <div
                 key={user.id}
-                style={{
-                  padding: '12px 14px',
-                  borderRadius: 10,
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                }}
+                className="flex items-center gap-3 rounded-[10px] border border-border bg-card px-3.5 py-3"
               >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 10,
-                    background: 'var(--gradient-primary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: 'white',
-                    flexShrink: 0,
-                  }}
-                >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-primary to-primary/70 text-sm font-bold text-white">
                   {user.displayName.charAt(0)}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{user.displayName}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                <div className="flex-1">
+                  <div className="text-[13px] font-semibold text-foreground">{user.displayName}</div>
+                  <div className="text-[11px] text-muted-foreground">
                     @{user.username} · Rep: {formatNumber(user.reputation)}
                   </div>
                 </div>
-                <span
-                  className="badge"
-                  style={{
-                    background: user.isPremium ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)',
-                    color: user.isPremium ? '#f59e0b' : '#64748b',
-                    fontSize: 10,
-                  }}
+                <Badge
+                  variant={user.isPremium ? 'default' : 'secondary'}
+                  className={
+                    user.isPremium
+                      ? 'bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 text-[10px]'
+                      : 'bg-slate-500/15 text-slate-500 hover:bg-slate-500/25 text-[10px]'
+                  }
                 >
                   {user.isPremium ? 'Premium' : 'Free'}
-                </span>
-                <button
-                  style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 6,
-                    background: 'var(--bg-card-hover)',
-                    border: '1px solid var(--border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <Eye size={14} color="var(--text-muted)" />
+                </Badge>
+                <button className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-border bg-secondary transition-colors hover:bg-secondary/80">
+                  <Eye size={14} className="text-muted-foreground" />
                 </button>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      {/* Reports */}
-      <div className="glass-card" style={{ padding: 24, marginTop: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle size={18} color="#ef4444" /> Flagged Content
+      {/* Flagged Content */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+        className="mt-5 rounded-xl border border-border/30 bg-card/50 p-6"
+      >
+        <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+          <AlertTriangle size={18} className="text-red-500" /> Flagged Content
         </h3>
-        <div
-          style={{
-            padding: 40,
-            textAlign: 'center',
-            color: 'var(--text-muted)',
-            fontSize: 14,
-          }}
-        >
-          <CheckCircle size={32} color="#10b981" style={{ marginBottom: 8 }} />
+        <div className="py-10 text-center text-sm text-muted-foreground">
+          <CheckCircle size={32} className="mx-auto mb-2 text-emerald-500" />
           <p>No flagged content. All clear!</p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

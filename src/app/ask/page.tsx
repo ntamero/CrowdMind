@@ -2,8 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brain, Plus, X, Sparkles, Send, Image, Globe, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Brain, Plus, X, Sparkles, Send, Globe, Lock } from 'lucide-react';
 import { categories } from '@/lib/mock-data';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+const optionColors = ['text-indigo-500', 'text-amber-500', 'text-emerald-500', 'text-red-500', 'text-violet-500', 'text-cyan-500'];
+const optionBgs = ['bg-indigo-500/10', 'bg-amber-500/10', 'bg-emerald-500/10', 'bg-red-500/10', 'bg-violet-500/10', 'bg-cyan-500/10'];
 
 export default function AskPage() {
   const router = useRouter();
@@ -40,86 +47,85 @@ export default function AskPage() {
   const handleSubmit = async () => {
     if (!title || !category || options.filter((o) => o.trim()).length < 2) return;
     setSubmitting(true);
-    // Simulate API call
     await new Promise((r) => setTimeout(r, 1500));
     router.push('/');
   };
 
+  const isValid = title && category && options.filter((o) => o.trim()).length >= 2;
+
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '20px 0' }}>
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <div
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 16,
-            background: 'var(--gradient-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-          }}
-        >
-          <Brain size={28} color="white" />
+    <div className="mx-auto max-w-[700px] py-5">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="mb-9 text-center"
+      >
+        <div className="mx-auto mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600">
+          <Brain size={28} className="text-white" />
         </div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8 }}>
+        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-foreground">
           Ask the World
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
+        <p className="text-[15px] text-muted-foreground">
           Share your decision and let collective intelligence guide you
         </p>
-      </div>
+      </motion.div>
 
-      <div className="glass-card" style={{ padding: 32 }}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="rounded-xl border border-border/30 bg-card/50 p-8"
+      >
         {/* Title */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, display: 'block' }}>
+        <div className="mb-6">
+          <label className="mb-2 block text-sm font-semibold text-foreground">
             Your Question
           </label>
-          <input
+          <Input
             type="text"
             placeholder='e.g., "Should I invest in Tesla or Apple?"'
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            style={{ fontSize: 16, padding: '14px 16px' }}
+            className="h-12 text-base"
           />
         </div>
 
         {/* Description */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, display: 'block' }}>
+        <div className="mb-6">
+          <label className="mb-2 block text-sm font-semibold text-foreground">
             Description (optional)
           </label>
-          <textarea
+          <Textarea
             placeholder="Add more context to help people understand your question..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
-            style={{ resize: 'vertical' }}
+            className="resize-y"
           />
         </div>
 
         {/* Category */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+        <div className="mb-6">
+          <label className="mb-3 block text-sm font-semibold text-foreground">
             Category
           </label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setCategory(cat.value)}
-                style={{
-                  padding: '10px 18px',
-                  borderRadius: 12,
-                  border: category === cat.value ? `2px solid ${cat.color}` : '1px solid var(--border)',
-                  background: category === cat.value ? `${cat.color}20` : 'var(--bg-card)',
-                  color: category === cat.value ? cat.color : 'var(--text-secondary)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
+                className={`cursor-pointer rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 ${
+                  category === cat.value
+                    ? 'border-2 bg-primary/10 text-primary'
+                    : 'border border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground'
+                }`}
+                style={
+                  category === cat.value
+                    ? { borderColor: cat.color, color: cat.color, background: `${cat.color}20` }
+                    : undefined
+                }
               >
                 {cat.icon} {cat.label}
               </button>
@@ -128,74 +134,44 @@ export default function AskPage() {
         </div>
 
         {/* Options */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+        <div className="mb-6">
+          <label className="mb-3 block text-sm font-semibold text-foreground">
             Options (min 2, max 6)
           </label>
           {options.map((opt, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2, delay: i * 0.05 }}
+              className="mb-2 flex gap-2"
+            >
               <div
-                style={{
-                  width: 36,
-                  height: 44,
-                  borderRadius: 8,
-                  background: `${['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'][i]}20`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4'][i],
-                  flexShrink: 0,
-                }}
+                className={`flex h-11 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${optionBgs[i]} ${optionColors[i]}`}
               >
                 {String.fromCharCode(65 + i)}
               </div>
-              <input
+              <Input
                 type="text"
                 placeholder={`Option ${String.fromCharCode(65 + i)}`}
                 value={opt}
                 onChange={(e) => updateOption(i, e.target.value)}
+                className="h-11"
               />
               {options.length > 2 && (
                 <button
                   onClick={() => removeOption(i)}
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 10,
-                    background: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    color: '#ef4444',
-                  }}
+                  className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-[10px] border border-red-500/20 bg-red-500/10 text-red-500 transition-colors hover:bg-red-500/20"
                 >
                   <X size={16} />
                 </button>
               )}
-            </div>
+            </motion.div>
           ))}
           {options.length < 6 && (
             <button
               onClick={addOption}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '10px 18px',
-                borderRadius: 10,
-                border: '1px dashed var(--border)',
-                background: 'transparent',
-                color: 'var(--primary-light)',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                marginTop: 8,
-              }}
+              className="mt-2 flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-dashed border-border bg-transparent px-4 py-2.5 text-[13px] font-semibold text-primary transition-colors hover:border-primary/40 hover:bg-primary/5"
             >
               <Plus size={16} /> Add Option
             </button>
@@ -203,79 +179,59 @@ export default function AskPage() {
         </div>
 
         {/* Tags */}
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 8, display: 'block' }}>
+        <div className="mb-6">
+          <label className="mb-2 block text-sm font-semibold text-foreground">
             Tags (max 5)
           </label>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+          <div className="mb-2 flex flex-wrap gap-2">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="tag"
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 onClick={() => setTags(tags.filter((t) => t !== tag))}
+                className="flex cursor-pointer items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
               >
                 #{tag} <X size={12} />
               </span>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input
+          <div className="flex gap-2">
+            <Input
               type="text"
               placeholder="Add a tag..."
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTag()}
+              className="h-9"
             />
-            <button className="btn-secondary" onClick={addTag} style={{ flexShrink: 0 }}>
+            <Button variant="outline" onClick={addTag} className="shrink-0">
               Add
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Visibility */}
-        <div style={{ marginBottom: 32 }}>
-          <label style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, display: 'block' }}>
+        <div className="mb-8">
+          <label className="mb-3 block text-sm font-semibold text-foreground">
             Visibility
           </label>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="flex gap-3">
             <button
               onClick={() => setVisibility('public')}
-              style={{
-                flex: 1,
-                padding: '14px',
-                borderRadius: 12,
-                border: visibility === 'public' ? '2px solid var(--primary)' : '1px solid var(--border)',
-                background: visibility === 'public' ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-card)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                fontWeight: 600,
-              }}
+              className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl p-3.5 text-sm font-semibold text-foreground transition-all ${
+                visibility === 'public'
+                  ? 'border-2 border-primary bg-primary/10'
+                  : 'border border-border bg-card hover:border-primary/30'
+              }`}
             >
               <Globe size={18} /> Public
             </button>
             <button
               onClick={() => setVisibility('premium')}
-              style={{
-                flex: 1,
-                padding: '14px',
-                borderRadius: 12,
-                border: visibility === 'premium' ? '2px solid var(--accent)' : '1px solid var(--border)',
-                background: visibility === 'premium' ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-card)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                fontWeight: 600,
-              }}
+              className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl p-3.5 text-sm font-semibold text-foreground transition-all ${
+                visibility === 'premium'
+                  ? 'border-2 border-amber-500 bg-amber-500/10'
+                  : 'border border-border bg-card hover:border-amber-500/30'
+              }`}
             >
               <Lock size={18} /> Premium
             </button>
@@ -283,44 +239,28 @@ export default function AskPage() {
         </div>
 
         {/* AI Preview */}
-        <div
-          style={{
-            padding: 16,
-            borderRadius: 12,
-            background: 'rgba(99, 102, 241, 0.08)',
-            border: '1px solid rgba(99, 102, 241, 0.15)',
-            marginBottom: 24,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-          }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6 flex items-center gap-3 rounded-xl border border-indigo-500/15 bg-indigo-500/[0.08] p-4"
         >
-          <Sparkles size={20} color="var(--primary-light)" />
+          <Sparkles size={20} className="text-indigo-400" />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--primary-light)' }}>
+            <div className="text-[13px] font-semibold text-indigo-400">
               AI Analysis Included
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            <div className="text-xs text-muted-foreground">
               Our AI will analyze votes and generate strategic insights
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Submit */}
-        <button
-          className="btn-glow"
+        <Button
           onClick={handleSubmit}
-          disabled={submitting || !title || !category || options.filter((o) => o.trim()).length < 2}
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            opacity: (!title || !category || options.filter((o) => o.trim()).length < 2) ? 0.5 : 1,
-          }}
+          disabled={submitting || !isValid}
+          className="flex h-12 w-full items-center justify-center gap-2 text-base"
         >
           {submitting ? (
             'Publishing...'
@@ -330,8 +270,8 @@ export default function AskPage() {
               Publish Question
             </>
           )}
-        </button>
-      </div>
+        </Button>
+      </motion.div>
     </div>
   );
 }

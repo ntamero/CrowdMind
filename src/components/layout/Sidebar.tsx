@@ -4,151 +4,103 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   TrendingUp, Zap, Trophy, User, Settings,
-  BarChart3, Flame, Globe, Star, Brain, Crown, Shield,
+  Brain, Crown, Shield, BarChart3, Flame, Globe, Star,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { categories } from '@/lib/mock-data';
+import { Separator } from '@/components/ui/separator';
 
 const mainLinks = [
-  { href: '/', icon: TrendingUp, label: 'Explore', color: '#6366f1' },
-  { href: '/predictions', icon: Zap, label: 'Predictions', color: '#f59e0b' },
-  { href: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: '#10b981' },
-  { href: '/ai-analysis', icon: Brain, label: 'AI Engine', color: '#06b6d4' },
-  { href: '/profile', icon: User, label: 'Profile', color: '#8b5cf6' },
-  { href: '/pricing', icon: Crown, label: 'Premium', color: '#ec4899' },
-  { href: '/settings', icon: Settings, label: 'Settings', color: '#64748b' },
-  { href: '/admin', icon: Shield, label: 'Admin', color: '#64748b' },
+  { href: '/', icon: TrendingUp, label: 'Explore' },
+  { href: '/predictions', icon: Zap, label: 'Predictions' },
+  { href: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
+  { href: '/ai-analysis', icon: Brain, label: 'AI Engine' },
+  { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/pricing', icon: Crown, label: 'Premium' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: '/admin', icon: Shield, label: 'Admin' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside
-      style={{
-        position: 'fixed', left: 0, top: 70, bottom: 0, width: 240,
-        background: 'rgba(8, 8, 30, 0.95)',
-        backdropFilter: 'blur(20px)',
-        borderRight: '1px solid var(--glass-border)',
-        padding: '20px 10px',
-        overflowY: 'auto',
-        zIndex: 40,
-      }}
-      className="sidebar-desktop"
-    >
-      {/* Main nav */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{
-          fontSize: 10, fontWeight: 800, color: 'var(--text-muted)',
-          textTransform: 'uppercase', letterSpacing: 1.5,
-          padding: '0 14px', marginBottom: 10,
-        }}>
+    <aside className="hidden lg:flex fixed left-0 top-14 bottom-0 w-[240px] bg-[#0a0a14]/95 backdrop-blur-xl border-r border-border/40 flex-col z-40 overflow-y-auto">
+      {/* Navigation */}
+      <div className="p-3 flex-1">
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-3 mb-2">
           Menu
+        </p>
+        <div className="space-y-0.5">
+          {mainLinks.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all relative no-underline',
+                  active
+                    ? 'bg-indigo-500/10 text-indigo-400'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
+                )}
+              >
+                <link.icon size={16} />
+                {link.label}
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-500" />
+                )}
+              </Link>
+            );
+          })}
         </div>
-        {mainLinks.map((link) => {
-          const active = pathname === link.href;
-          const Icon = link.icon;
-          return (
+
+        <Separator className="my-4 bg-border/30" />
+
+        {/* Categories */}
+        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[1.5px] px-3 mb-2">
+          Topics
+        </p>
+        <div className="space-y-0.5">
+          {categories.slice(0, 6).map((cat) => (
             <Link
-              key={link.href}
-              href={link.href}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 14px', borderRadius: 12,
-                textDecoration: 'none', fontSize: 13, fontWeight: active ? 700 : 500,
-                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                background: active ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                marginBottom: 2,
-                position: 'relative',
-              }}
+              key={cat.value}
+              href={`/?category=${cat.value}`}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors no-underline"
             >
-              <div style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: active ? `${link.color}18` : 'transparent',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.25s',
-              }}>
-                <Icon size={17} style={{ color: active ? link.color : 'inherit' }} />
-              </div>
-              {link.label}
-              {active && (
-                <div style={{
-                  position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-                  width: 3, height: 20, borderRadius: '0 2px 2px 0',
-                  background: link.color,
-                }} />
-              )}
+              <span className="text-sm">{cat.icon}</span>
+              {cat.label}
             </Link>
-          );
-        })}
-      </div>
-
-      {/* Categories */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{
-          fontSize: 10, fontWeight: 800, color: 'var(--text-muted)',
-          textTransform: 'uppercase', letterSpacing: 1.5,
-          padding: '0 14px', marginBottom: 10,
-        }}>
-          Categories
-        </div>
-        {categories.slice(0, 6).map((cat) => (
-          <Link
-            key={cat.value}
-            href={`/?category=${cat.value}`}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '8px 14px', borderRadius: 10,
-              textDecoration: 'none', fontSize: 13,
-              color: 'var(--text-secondary)', transition: 'all 0.2s',
-            }}
-          >
-            <span style={{ fontSize: 15 }}>{cat.icon}</span>
-            {cat.label}
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick Stats */}
-      <div style={{
-        margin: '0 4px', padding: 16, borderRadius: 14,
-        background: 'rgba(14, 14, 50, 0.6)',
-        border: '1px solid var(--glass-border)',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          marginBottom: 14, fontSize: 12, fontWeight: 700, color: 'var(--primary-light)',
-        }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: '50%', background: '#10b981',
-            display: 'inline-block',
-          }} className="pulse-dot" />
-          <Flame size={13} />
-          Live Now
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <StatItem icon={<Globe size={13} />} label="Online" value="3,420" color="#10b981" />
-          <StatItem icon={<BarChart3 size={13} />} label="Votes today" value="24.5K" color="#6366f1" />
-          <StatItem icon={<Star size={13} />} label="New questions" value="127" color="#f59e0b" />
+          ))}
         </div>
       </div>
 
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .sidebar-desktop { display: none; }
-        }
-      `}</style>
+      {/* Live Stats Footer */}
+      <div className="p-3 border-t border-border/30">
+        <div className="bg-secondary/30 rounded-xl p-3.5">
+          <div className="flex items-center gap-1.5 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
+            <Flame size={12} className="text-indigo-400" />
+            <span className="text-[11px] font-semibold text-indigo-400">Live</span>
+          </div>
+          <div className="space-y-2.5">
+            <StatRow icon={<Globe size={12} />} label="Online" value="3,420" />
+            <StatRow icon={<BarChart3 size={12} />} label="Votes today" value="24.5K" />
+            <StatRow icon={<Star size={12} />} label="Questions" value="127" />
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }
 
-function StatItem({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
+function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon} {label}
       </div>
-      <span style={{ fontSize: 13, fontWeight: 800, color }}>{value}</span>
+      <span className="text-[12px] font-bold text-foreground">{value}</span>
     </div>
   );
 }

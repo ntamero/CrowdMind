@@ -2,17 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
-  MessageSquare,
-  Share2,
-  Bookmark,
-  TrendingUp,
-  Clock,
-  Sparkles,
-  BarChart3,
+  MessageSquare, Share2, Bookmark, TrendingUp,
+  BarChart3, Sparkles, Users,
 } from 'lucide-react';
 import type { Question } from '@/types';
 import { formatNumber, timeAgo } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import ShareModal from '@/components/shared/ShareModal';
 
 export default function QuestionCard({ question }: { question: Question }) {
@@ -30,109 +29,59 @@ export default function QuestionCard({ question }: { question: Question }) {
     setLocalOptions((prev) =>
       prev.map((opt) => {
         const newVotes = opt.id === optionId ? opt.votes + 1 : opt.votes;
-        return {
-          ...opt,
-          votes: newVotes,
-          percentage: Math.round((newVotes / newTotal) * 100),
-        };
+        return { ...opt, votes: newVotes, percentage: Math.round((newVotes / newTotal) * 100) };
       })
     );
   };
 
   return (
-    <div className="glass-card" style={{ padding: 24, marginBottom: 16 }}>
-      {/* Header */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'var(--gradient-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              fontWeight: 700,
-              color: 'white',
-            }}
-          >
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-card border border-border/50 rounded-xl p-5 mb-3 hover:border-border transition-colors"
+    >
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
             {question.user.displayName.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {question.user.displayName}
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-              {timeAgo(question.createdAt)}
-            </div>
+            <span className="text-[13px] font-semibold">{question.user.displayName}</span>
+            <span className="text-[11px] text-muted-foreground ml-2">{timeAgo(question.createdAt)}</span>
           </div>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex items-center gap-1.5">
           {question.status === 'trending' && (
-            <span
-              className="badge"
-              style={{
-                background: 'rgba(239, 68, 68, 0.15)',
-                color: '#ef4444',
-              }}
-            >
-              <TrendingUp size={12} /> Trending
-            </span>
+            <Badge variant="secondary" className="text-[10px] gap-1 bg-red-500/10 text-red-400 border-0">
+              <TrendingUp size={10} /> Trending
+            </Badge>
           )}
           {question.aiAnalysis && (
-            <span
-              className="badge"
-              style={{
-                background: 'rgba(99, 102, 241, 0.15)',
-                color: 'var(--primary-light)',
-              }}
-            >
-              <Sparkles size={12} /> AI
-            </span>
+            <Badge variant="secondary" className="text-[10px] gap-1 bg-indigo-500/10 text-indigo-400 border-0">
+              <Sparkles size={10} /> AI
+            </Badge>
           )}
+          <Badge variant="secondary" className="text-[10px] border-0 capitalize">
+            {question.category}
+          </Badge>
         </div>
       </div>
 
-      {/* Title */}
-      <Link
-        href={`/questions/${question.id}`}
-        style={{ textDecoration: 'none', color: 'inherit' }}
-      >
-        <h3
-          style={{
-            fontSize: 18,
-            fontWeight: 700,
-            marginBottom: 8,
-            lineHeight: 1.4,
-            cursor: 'pointer',
-          }}
-        >
+      {/* Title & Description */}
+      <Link href={`/questions/${question.id}`} className="no-underline text-inherit">
+        <h3 className="text-[16px] font-bold leading-snug mb-1.5 hover:text-indigo-400 transition-colors cursor-pointer">
           {question.title}
         </h3>
       </Link>
-      <p
-        style={{
-          fontSize: 14,
-          color: 'var(--text-secondary)',
-          marginBottom: 18,
-          lineHeight: 1.5,
-        }}
-      >
-        {question.description}
-      </p>
+      {question.description && (
+        <p className="text-[13px] text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+          {question.description}
+        </p>
+      )}
 
       {/* Voting Options */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+      <div className="space-y-2 mb-4">
         {localOptions.map((option) => {
           const isVoted = voted === option.id;
           const showResults = !!voted;
@@ -141,54 +90,28 @@ export default function QuestionCard({ question }: { question: Question }) {
               key={option.id}
               onClick={() => handleVote(option.id)}
               disabled={!!voted}
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 16px',
-                borderRadius: 12,
-                border: isVoted
-                  ? `2px solid ${option.color}`
-                  : '1px solid var(--border)',
-                background: 'var(--bg-card)',
-                cursor: voted ? 'default' : 'pointer',
-                overflow: 'hidden',
-                transition: 'all 0.3s',
-                color: 'var(--text-primary)',
-                fontSize: 14,
-                fontWeight: 500,
-                width: '100%',
-                textAlign: 'left',
-              }}
+              className={cn(
+                'relative w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-left text-[13px] font-medium transition-all overflow-hidden',
+                isVoted
+                  ? 'border-2 bg-card'
+                  : 'border border-border/60 bg-secondary/30 hover:bg-secondary/60 cursor-pointer',
+                voted && !isVoted && 'opacity-70',
+              )}
+              style={{ borderColor: isVoted ? option.color : undefined }}
             >
+              {/* Progress fill */}
               {showResults && (
-                <div
-                  className="vote-bar"
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    width: `${option.percentage}%`,
-                    background: `${option.color}15`,
-                    borderRadius: 12,
-                  }}
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${option.percentage}%` }}
+                  transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute inset-y-0 left-0 rounded-lg"
+                  style={{ background: `${option.color}12` }}
                 />
               )}
-              <span style={{ position: 'relative', zIndex: 1 }}>
-                {option.text}
-              </span>
+              <span className="relative z-10">{option.text}</span>
               {showResults && (
-                <span
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    fontWeight: 700,
-                    color: option.color,
-                    fontSize: 15,
-                  }}
-                >
+                <span className="relative z-10 font-bold text-[14px]" style={{ color: option.color }}>
                   {option.percentage}%
                 </span>
               )}
@@ -198,103 +121,47 @@ export default function QuestionCard({ question }: { question: Question }) {
       </div>
 
       {/* Footer */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingTop: 14,
-          borderTop: '1px solid var(--border)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <FooterStat icon={<BarChart3 size={14} />} value={formatNumber(localTotal)} label="votes" />
-          <FooterStat icon={<MessageSquare size={14} />} value={formatNumber(question.totalComments)} label="comments" />
-          {question.expiresAt && (
-            <FooterStat icon={<Clock size={14} />} value={timeAgo(question.expiresAt)} label="" />
-          )}
+      <div className="flex items-center justify-between pt-3 border-t border-border/30">
+        <div className="flex items-center gap-4 text-[12px] text-muted-foreground">
+          <span className="flex items-center gap-1.5 font-semibold">
+            <Users size={13} /> {formatNumber(localTotal)} votes
+          </span>
+          <span className="flex items-center gap-1.5">
+            <MessageSquare size={13} /> {question.totalComments}
+          </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <IconBtn
-            icon={<Bookmark size={16} fill={bookmarked ? 'var(--accent)' : 'none'} color={bookmarked ? 'var(--accent)' : 'var(--text-muted)'} />}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
             onClick={() => setBookmarked(!bookmarked)}
-          />
-          <IconBtn icon={<Share2 size={16} color="var(--text-muted)" />} onClick={() => setShowShare(true)} />
+          >
+            <Bookmark size={14} fill={bookmarked ? '#f59e0b' : 'none'} className={bookmarked ? 'text-amber-500' : 'text-muted-foreground'} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setShowShare(true)}
+          >
+            <Share2 size={14} className="text-muted-foreground" />
+          </Button>
         </div>
       </div>
 
       {/* Tags */}
       {question.tags.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 6,
-            flexWrap: 'wrap',
-            marginTop: 12,
-          }}
-        >
+        <div className="flex gap-1.5 flex-wrap mt-3">
           {question.tags.map((tag) => (
-            <span key={tag} className="tag">
+            <span key={tag} className="text-[11px] text-indigo-400/70 bg-indigo-500/5 px-2 py-0.5 rounded-full">
               #{tag}
             </span>
           ))}
         </div>
       )}
 
-      <ShareModal
-        isOpen={showShare}
-        onClose={() => setShowShare(false)}
-        title={question.title}
-        url={`/questions/${question.id}`}
-      />
-    </div>
-  );
-}
-
-function FooterStat({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 4,
-        fontSize: 13,
-        color: 'var(--text-muted)',
-      }}
-    >
-      {icon}
-      <span style={{ fontWeight: 600 }}>{value}</span>
-      {label && <span>{label}</span>}
-    </div>
-  );
-}
-
-function IconBtn({ icon, onClick }: { icon: React.ReactNode; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 8,
-        background: 'transparent',
-        border: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
-    >
-      {icon}
-    </button>
+      <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} title={question.title} url={`/questions/${question.id}`} />
+    </motion.div>
   );
 }

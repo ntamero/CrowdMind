@@ -1,283 +1,178 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Zap,
-  Trophy,
-  Users,
-  Clock,
-  TrendingUp,
-  DollarSign,
-  Target,
-  Flame,
-  Share2,
+  Zap, Trophy, Users, Clock, TrendingUp,
+  DollarSign, Target, Flame, Share2,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { mockPredictions } from '@/lib/mock-data';
-import { formatNumber, timeAgo } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export default function PredictionsPage() {
   const [filter, setFilter] = useState<string>('all');
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
 
-  const categories = ['all', 'crypto', 'tech', 'sports', 'politics'];
-
-  const filtered =
-    filter === 'all'
-      ? mockPredictions
-      : mockPredictions.filter((p) => p.category === filter);
+  const cats = ['all', 'crypto', 'tech', 'sports', 'politics'];
+  const filtered = filter === 'all' ? mockPredictions : mockPredictions.filter((p) => p.category === filter);
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 0' }}>
+    <div className="max-w-[900px] mx-auto py-4">
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <div
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-          }}
-        >
-          <Zap size={28} color="white" />
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center mx-auto mb-4">
+          <Zap size={28} className="text-white" />
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>
-          Prediction{' '}
-          <span
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Markets
-          </span>
+        <h1 className="text-3xl font-black tracking-tight mb-2">
+          Prediction <span className="gradient-text">Markets</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
-          Forecast the future. Compete with the crowd. Win prizes.
-        </p>
-      </div>
+        <p className="text-muted-foreground text-[14px]">Forecast the future. Compete with the crowd. Win prizes.</p>
+      </motion.div>
 
       {/* Stats */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 12,
-          marginBottom: 28,
-        }}
-      >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
         {[
-          { icon: Zap, label: 'Active Markets', value: '48', color: '#f59e0b' },
-          { icon: Users, label: 'Participants', value: '48.2K', color: '#6366f1' },
-          { icon: DollarSign, label: 'Prize Pool', value: '$18K', color: '#10b981' },
-          { icon: Trophy, label: 'Top Accuracy', value: '82.1%', color: '#ef4444' },
-        ].map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <div key={stat.label} className="glass-card" style={{ padding: '18px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 12,
-                  background: `${stat.color}18`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon size={20} color={stat.color} />
-              </div>
-              <div>
-                <div style={{ fontSize: 22, fontWeight: 800 }}>{stat.value}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{stat.label}</div>
-              </div>
+          { icon: Zap, label: 'Active Markets', value: '48', color: 'text-amber-400', bg: 'bg-amber-500/8' },
+          { icon: Users, label: 'Participants', value: '48.2K', color: 'text-indigo-400', bg: 'bg-indigo-500/8' },
+          { icon: DollarSign, label: 'Prize Pool', value: '$18K', color: 'text-emerald-400', bg: 'bg-emerald-500/8' },
+          { icon: Trophy, label: 'Top Accuracy', value: '82.1%', color: 'text-red-400', bg: 'bg-red-500/8' },
+        ].map((s) => (
+          <div key={s.label} className="bg-card/50 border border-border/30 rounded-xl p-4 flex items-center gap-3">
+            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', s.bg)}>
+              <s.icon size={18} className={s.color} />
             </div>
-          );
-        })}
-      </div>
-
-      {/* Category Filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            style={{
-              padding: '8px 20px',
-              borderRadius: 10,
-              border: '1px solid var(--border)',
-              background: filter === cat ? 'var(--primary)' : 'transparent',
-              color: filter === cat ? 'white' : 'var(--text-secondary)',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              textTransform: 'capitalize',
-              transition: 'all 0.2s',
-            }}
-          >
-            {cat}
-          </button>
+            <div>
+              <div className="text-xl font-black">{s.value}</div>
+              <div className="text-[10px] text-muted-foreground font-medium">{s.label}</div>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Prediction Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {filtered.map((prediction) => {
+      {/* Filter */}
+      <div className="flex gap-1.5 mb-5">
+        {cats.map((cat) => (
+          <Button
+            key={cat}
+            variant={filter === cat ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => setFilter(cat)}
+            className={cn(
+              'capitalize text-[12px] h-8',
+              filter === cat ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'text-muted-foreground'
+            )}
+          >
+            {cat}
+          </Button>
+        ))}
+      </div>
+
+      {/* Markets */}
+      <div className="space-y-3">
+        {filtered.map((prediction, i) => {
           const isExpanded = selectedPrediction === prediction.id;
           return (
-            <div
+            <motion.div
               key={prediction.id}
-              className="glass-card"
-              style={{
-                padding: 24,
-                cursor: 'pointer',
-                border: isExpanded ? '1px solid rgba(245, 158, 11, 0.3)' : undefined,
-              }}
-              onClick={() =>
-                setSelectedPrediction(isExpanded ? null : prediction.id)
-              }
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className={cn(
+                'bg-card border rounded-xl p-5 cursor-pointer transition-colors',
+                isExpanded ? 'border-indigo-500/30' : 'border-border/40 hover:border-border'
+              )}
+              onClick={() => setSelectedPrediction(isExpanded ? null : prediction.id)}
             >
               {/* Header */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span
-                      className="badge"
-                      style={{
-                        background: prediction.status === 'open' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                        color: prediction.status === 'open' ? '#10b981' : '#ef4444',
-                      }}
-                    >
-                      {prediction.status === 'open' ? <Flame size={12} /> : <Clock size={12} />}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="secondary" className={cn(
+                      'text-[10px] gap-1 border-0',
+                      prediction.status === 'open' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                    )}>
+                      {prediction.status === 'open' ? <Flame size={10} /> : <Clock size={10} />}
                       {prediction.status}
-                    </span>
-                    <span className="tag">{prediction.category}</span>
+                    </Badge>
+                    <Badge variant="secondary" className="text-[10px] border-0 capitalize">
+                      {prediction.category}
+                    </Badge>
                   </div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>
-                    {prediction.title}
-                  </h3>
-                  <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-                    {prediction.description}
-                  </p>
+                  <h3 className="text-[17px] font-bold leading-snug mb-1">{prediction.title}</h3>
+                  <p className="text-[13px] text-muted-foreground">{prediction.description}</p>
                 </div>
                 {prediction.prize && (
-                  <div
-                    style={{
-                      padding: '10px 16px',
-                      borderRadius: 12,
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
-                      textAlign: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginBottom: 2 }}>PRIZE</div>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: '#10b981' }}>
-                      ${prediction.prize.toLocaleString()}
-                    </div>
+                  <div className="bg-emerald-500/8 border border-emerald-500/15 rounded-xl px-4 py-2.5 text-center shrink-0 ml-4">
+                    <div className="text-[10px] text-emerald-400 font-semibold mb-0.5">PRIZE</div>
+                    <div className="text-lg font-black text-emerald-400">${prediction.prize.toLocaleString()}</div>
                   </div>
                 )}
               </div>
 
-              {/* Stats row */}
-              <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)' }}>
-                  <Users size={14} /> {formatNumber(prediction.totalParticipants)} participants
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-muted)' }}>
-                  <Clock size={14} /> Ends {new Date(prediction.targetDate).toLocaleDateString()}
-                </div>
+              {/* Meta */}
+              <div className="flex gap-5 mb-4 text-[12px] text-muted-foreground">
+                <span className="flex items-center gap-1.5"><Users size={13} /> {formatNumber(prediction.totalParticipants)}</span>
+                <span className="flex items-center gap-1.5"><Clock size={13} /> {new Date(prediction.targetDate).toLocaleDateString()}</span>
                 {prediction.currentValue && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--accent)' }}>
-                    <TrendingUp size={14} /> ${prediction.currentValue.toLocaleString()}
-                  </div>
+                  <span className="flex items-center gap-1.5 text-amber-400"><TrendingUp size={13} /> ${prediction.currentValue.toLocaleString()}</span>
                 )}
               </div>
 
               {/* Options */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="space-y-2">
                 {prediction.options.map((option) => {
                   const totalP = prediction.totalParticipants || 1;
                   const pct = Math.round((option.participants / totalP) * 100);
                   return (
-                    <div
-                      key={option.id}
-                      style={{
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '12px 16px',
-                        borderRadius: 10,
-                        background: 'var(--bg-card)',
-                        border: '1px solid var(--border)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: `${pct}%`,
-                          background: 'rgba(99, 102, 241, 0.08)',
-                          borderRadius: 10,
-                        }}
-                      />
-                      <span style={{ position: 'relative', zIndex: 1, fontSize: 14, fontWeight: 500 }}>
-                        {option.text}
-                      </span>
-                      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {formatNumber(option.participants)}
-                        </span>
-                        <span
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: 6,
-                            background: 'rgba(245, 158, 11, 0.1)',
-                            color: 'var(--accent)',
-                            fontSize: 12,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {option.odds}x
-                        </span>
-                        <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--primary-light)' }}>
-                          {pct}%
-                        </span>
+                    <div key={option.id} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[13px] font-medium">{option.text}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[11px] text-muted-foreground">{formatNumber(option.participants)}</span>
+                            <Badge variant="secondary" className="text-[10px] bg-amber-500/10 text-amber-400 border-0 px-1.5 py-0">
+                              {option.odds}x
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={pct} className="h-1.5 flex-1 bg-secondary/50" />
+                          <span className="text-[13px] font-bold text-indigo-400 w-10 text-right">{pct}%</span>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Expanded: predict button */}
-              {isExpanded && (
-                <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
-                  <button
-                    className="btn-glow"
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                    onClick={(e) => e.stopPropagation()}
+              {/* Expanded */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
                   >
-                    <Target size={18} /> Make Prediction
-                  </button>
-                  <button
-                    className="btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Share2 size={16} /> Share
-                  </button>
-                </div>
-              )}
-            </div>
+                    <div className="flex gap-2.5 mt-4 pt-4 border-t border-border/30">
+                      <Button
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Target size={16} /> Make Prediction
+                      </Button>
+                      <Button variant="outline" className="gap-2 border-border/50" onClick={(e) => e.stopPropagation()}>
+                        <Share2 size={14} /> Share
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>

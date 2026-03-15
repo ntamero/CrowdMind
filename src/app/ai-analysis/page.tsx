@@ -4,6 +4,9 @@ import {
   Brain, TrendingUp, Heart, Target, AlertTriangle, BarChart3,
   Sparkles, Globe, Zap, ChevronRight, ArrowUp, ArrowDown,
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { motion } from 'framer-motion';
 
 const aiModules = [
   {
@@ -11,8 +14,8 @@ const aiModules = [
     name: 'Sentiment AI',
     description: 'Analyzes emotional tone and public opinion across all votes and comments',
     icon: Heart,
-    color: '#ef4444',
-    gradient: 'linear-gradient(135deg, #ef4444, #ec4899)',
+    colorClass: 'text-red-500',
+    gradientClass: 'bg-gradient-to-br from-red-500 to-pink-500',
     stats: { analyzed: '2.4M', accuracy: '91%', signals: '156K' },
     sample: {
       topic: 'AI-first startups',
@@ -27,8 +30,8 @@ const aiModules = [
     name: 'Decision AI',
     description: 'Recommends the best option based on crowd wisdom, expert weight, and historical patterns',
     icon: Target,
-    color: '#10b981',
-    gradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
+    colorClass: 'text-emerald-500',
+    gradientClass: 'bg-gradient-to-br from-emerald-500 to-cyan-500',
     stats: { decisions: '890K', accuracy: '84%', users: '145K' },
     sample: {
       question: 'Best investment strategy 2026?',
@@ -42,8 +45,8 @@ const aiModules = [
     name: 'Trend AI',
     description: 'Identifies emerging topics, viral patterns, and shifts in collective opinion',
     icon: TrendingUp,
-    color: '#6366f1',
-    gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    colorClass: 'text-indigo-500',
+    gradientClass: 'bg-gradient-to-br from-indigo-500 to-violet-500',
     stats: { trends: '2.1K', predictions: '340', accuracy: '79%' },
     rising: [
       { topic: 'AI Agents', change: '+234%', direction: 'up' },
@@ -57,8 +60,8 @@ const aiModules = [
     name: 'Prediction AI',
     description: 'Scores prediction accuracy and identifies the most reliable forecasters',
     icon: Zap,
-    color: '#f59e0b',
-    gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+    colorClass: 'text-amber-500',
+    gradientClass: 'bg-gradient-to-br from-amber-500 to-red-500',
     stats: { predictions: '8.9K', resolved: '3.2K', avgAccuracy: '71%' },
     topPredictions: [
       { topic: 'Bitcoin > $100K by Q2', probability: 68, participants: 9790 },
@@ -71,8 +74,8 @@ const aiModules = [
     name: 'Risk AI',
     description: 'Evaluates risk factors for investment, business, and strategic decisions',
     icon: AlertTriangle,
-    color: '#8b5cf6',
-    gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+    colorClass: 'text-violet-500',
+    gradientClass: 'bg-gradient-to-br from-violet-500 to-purple-500',
     stats: { assessments: '45K', alerts: '890', accuracy: '76%' },
     riskFactors: [
       { factor: 'Market volatility', level: 'high', score: 78 },
@@ -83,135 +86,161 @@ const aiModules = [
   },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
+};
+
+const globalStats = [
+  { icon: Brain, label: 'AI Analyses', value: '4.8M', colorClass: 'text-indigo-500' },
+  { icon: Globe, label: 'Data Points', value: '12.8M', colorClass: 'text-cyan-500' },
+  { icon: BarChart3, label: 'Avg Accuracy', value: '84%', colorClass: 'text-emerald-500' },
+  { icon: Sparkles, label: 'Insights/Day', value: '2.4K', colorClass: 'text-amber-500' },
+];
+
 export default function AIAnalysisPage() {
   return (
-    <div style={{ maxWidth: 950, margin: '0 auto', padding: '20px 0' }}>
+    <div className="mx-auto max-w-[950px] py-5">
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: 18, background: 'var(--gradient-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
-        }}>
-          <Brain size={32} color="white" />
+      <motion.div
+        className="mb-10 text-center"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600">
+          <Brain size={32} className="text-white" />
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 8 }}>
+        <h1 className="mb-2 text-4xl font-black">
           AI{' '}
-          <span style={{
-            background: 'var(--gradient-primary)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>Intelligence Engine</span>
+          <span className="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
+            Intelligence Engine
+          </span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 16, maxWidth: 550, margin: '0 auto' }}>
+        <p className="mx-auto max-w-[550px] text-base text-muted-foreground">
           5 specialized AI modules analyze millions of votes and predictions to deliver actionable insights
         </p>
-      </div>
+      </motion.div>
 
       {/* Global stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 32 }}>
-        {[
-          { icon: Brain, label: 'AI Analyses', value: '4.8M', color: '#6366f1' },
-          { icon: Globe, label: 'Data Points', value: '12.8M', color: '#06b6d4' },
-          { icon: BarChart3, label: 'Avg Accuracy', value: '84%', color: '#10b981' },
-          { icon: Sparkles, label: 'Insights/Day', value: '2.4K', color: '#f59e0b' },
-        ].map((s) => {
+      <motion.div
+        className="mb-8 grid grid-cols-4 gap-3"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {globalStats.map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="glass-card" style={{ padding: 18, textAlign: 'center' }}>
-              <Icon size={22} color={s.color} style={{ marginBottom: 8 }} />
-              <div style={{ fontSize: 24, fontWeight: 800 }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.label}</div>
-            </div>
+            <motion.div
+              key={s.label}
+              variants={itemVariants}
+              className="bg-card/50 border border-border/30 rounded-xl p-4 text-center"
+            >
+              <Icon size={22} className={`mx-auto mb-2 ${s.colorClass}`} />
+              <div className="text-2xl font-extrabold">{s.value}</div>
+              <div className="text-xs text-muted-foreground">{s.label}</div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* AI Modules */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {aiModules.map((mod) => {
+      <motion.div
+        className="flex flex-col gap-5"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {aiModules.map((mod, index) => {
           const Icon = mod.icon;
           return (
-            <div key={mod.id} className="glass-card" style={{ padding: 28 }}>
+            <motion.div
+              key={mod.id}
+              variants={itemVariants}
+              className="bg-card/50 border border-border/30 rounded-xl p-7"
+            >
               {/* Module Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-                <div style={{
-                  width: 50, height: 50, borderRadius: 14, background: mod.gradient,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Icon size={24} color="white" />
+              <div className="mb-5 flex items-center gap-3.5">
+                <div className={`flex h-[50px] w-[50px] items-center justify-center rounded-[14px] ${mod.gradientClass}`}>
+                  <Icon size={24} className="text-white" />
                 </div>
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700 }}>{mod.name}</h3>
-                  <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{mod.description}</p>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold">{mod.name}</h3>
+                  <p className="text-[13px] text-muted-foreground">{mod.description}</p>
                 </div>
-                <div style={{ display: 'flex', gap: 16 }}>
+                <div className="flex gap-4">
                   {Object.entries(mod.stats).map(([key, val]) => (
-                    <div key={key} style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: mod.color }}>{val}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{key}</div>
+                    <div key={key} className="text-center">
+                      <div className={`text-lg font-extrabold ${mod.colorClass}`}>{val}</div>
+                      <div className="text-[11px] capitalize text-muted-foreground">{key}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Module-specific content */}
+              {/* Sentiment */}
               {mod.id === 'sentiment' && mod.sample && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-card)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: mod.color }}>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-muted/50 p-4">
+                    <div className="mb-3 text-[13px] font-semibold text-red-500">
                       Live Sentiment — {mod.sample.topic}
                     </div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                      {[
-                        { label: 'Positive', value: mod.sample.positive, color: '#10b981' },
-                        { label: 'Neutral', value: mod.sample.neutral, color: '#f59e0b' },
-                        { label: 'Negative', value: mod.sample.negative, color: '#ef4444' },
-                      ].map((s) => (
-                        <div key={s.label} style={{ flex: s.value, height: 8, borderRadius: 4, background: s.color }} />
-                      ))}
+                    <div className="mb-2 flex gap-2">
+                      <div className="h-2 rounded bg-emerald-500" style={{ flex: mod.sample.positive }} />
+                      <div className="h-2 rounded bg-amber-500" style={{ flex: mod.sample.neutral }} />
+                      <div className="h-2 rounded bg-red-500" style={{ flex: mod.sample.negative }} />
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Positive {mod.sample.positive}%</span>
                       <span>Neutral {mod.sample.neutral}%</span>
                       <span>Negative {mod.sample.negative}%</span>
                     </div>
                   </div>
-                  <div style={{ padding: 16, borderRadius: 12, background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#10b981' }}>Trend Signal</div>
-                    <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{mod.sample.trend}</div>
+                  <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.08] p-4">
+                    <div className="mb-1.5 text-[13px] font-semibold text-emerald-500">Trend Signal</div>
+                    <div className="text-sm leading-relaxed text-muted-foreground">{mod.sample.trend}</div>
                   </div>
                 </div>
               )}
 
+              {/* Decision */}
               {mod.id === 'decision' && mod.sample && (
-                <div style={{ padding: 16, borderRadius: 12, background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <Target size={16} color="#10b981" />
-                    <span style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>AI Recommendation</span>
-                    <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', marginLeft: 'auto' }}>
+                <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.08] p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Target size={16} className="text-emerald-500" />
+                    <span className="text-sm font-bold text-emerald-500">AI Recommendation</span>
+                    <Badge variant="outline" className="ml-auto border-emerald-500/30 bg-emerald-500/15 text-emerald-500">
                       {mod.sample.confidence}% confidence
-                    </span>
+                    </Badge>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 6 }}>{mod.sample.question}</div>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>{mod.sample.recommendation}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>{mod.sample.basis}</div>
+                  <div className="mb-1.5 text-[13px] text-muted-foreground">{mod.sample.question}</div>
+                  <div className="text-lg font-bold">{mod.sample.recommendation}</div>
+                  <div className="mt-1.5 text-xs text-muted-foreground">{mod.sample.basis}</div>
                 </div>
               )}
 
+              {/* Trend */}
               {mod.id === 'trend' && mod.rising && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="grid grid-cols-2 gap-2.5">
                   {mod.rising.map((t) => (
-                    <div key={t.topic} style={{
-                      padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <ChevronRight size={14} color={mod.color} />
-                        <span style={{ fontSize: 14, fontWeight: 500 }}>{t.topic}</span>
+                    <div
+                      key={t.topic}
+                      className="flex items-center justify-between rounded-[10px] bg-muted/50 px-4 py-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ChevronRight size={14} className="text-indigo-500" />
+                        <span className="text-sm font-medium">{t.topic}</span>
                       </div>
-                      <span style={{
-                        fontSize: 13, fontWeight: 700,
-                        color: t.direction === 'up' ? '#10b981' : '#ef4444',
-                        display: 'flex', alignItems: 'center', gap: 4,
-                      }}>
+                      <span className={`flex items-center gap-1 text-[13px] font-bold ${t.direction === 'up' ? 'text-emerald-500' : 'text-red-500'}`}>
                         {t.direction === 'up' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
                         {t.change}
                       </span>
@@ -220,27 +249,26 @@ export default function AIAnalysisPage() {
                 </div>
               )}
 
+              {/* Prediction */}
               {mod.id === 'prediction' && mod.topPredictions && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div className="flex flex-col gap-2.5">
                   {mod.topPredictions.map((p) => (
-                    <div key={p.topic} style={{
-                      padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}>
-                      <span style={{ fontSize: 14, fontWeight: 500 }}>{p.topic}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    <div
+                      key={p.topic}
+                      className="flex items-center justify-between rounded-[10px] bg-muted/50 px-4 py-3"
+                    >
+                      <span className="text-sm font-medium">{p.topic}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-muted-foreground">
                           {p.participants.toLocaleString()} participants
                         </span>
-                        <div style={{
-                          width: 60, height: 8, borderRadius: 4, background: 'var(--bg-primary)', overflow: 'hidden',
-                        }}>
-                          <div style={{
-                            width: `${p.probability}%`, height: '100%', borderRadius: 4,
-                            background: p.probability > 60 ? '#10b981' : p.probability > 40 ? '#f59e0b' : '#ef4444',
-                          }} />
+                        <div className="w-[60px]">
+                          <Progress
+                            value={p.probability}
+                            className="h-2 [&_[data-slot=progress-track]]:h-2 [&_[data-slot=progress-track]]:rounded [&_[data-slot=progress-indicator]]:rounded"
+                          />
                         </div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: mod.color, minWidth: 36 }}>
+                        <span className="min-w-[36px] text-sm font-bold text-amber-500">
                           {p.probability}%
                         </span>
                       </div>
@@ -249,39 +277,48 @@ export default function AIAnalysisPage() {
                 </div>
               )}
 
+              {/* Risk */}
               {mod.id === 'risk' && mod.riskFactors && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="grid grid-cols-2 gap-2.5">
                   {mod.riskFactors.map((r) => (
-                    <div key={r.factor} style={{
-                      padding: '12px 16px', borderRadius: 10, background: 'var(--bg-card)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}>
+                    <div
+                      key={r.factor}
+                      className="flex items-center justify-between rounded-[10px] bg-muted/50 px-4 py-3"
+                    >
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 500 }}>{r.factor}</div>
-                        <span className="badge" style={{
-                          background: r.level === 'high' ? 'rgba(239, 68, 68, 0.15)' : r.level === 'medium' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                          color: r.level === 'high' ? '#ef4444' : r.level === 'medium' ? '#f59e0b' : '#10b981',
-                          fontSize: 10, marginTop: 4,
-                        }}>
+                        <div className="text-sm font-medium">{r.factor}</div>
+                        <Badge
+                          variant="outline"
+                          className={`mt-1 text-[10px] ${
+                            r.level === 'high'
+                              ? 'border-red-500/30 bg-red-500/15 text-red-500'
+                              : r.level === 'medium'
+                              ? 'border-amber-500/30 bg-amber-500/15 text-amber-500'
+                              : 'border-emerald-500/30 bg-emerald-500/15 text-emerald-500'
+                          }`}
+                        >
                           {r.level} risk
-                        </span>
+                        </Badge>
                       </div>
-                      <div style={{
-                        width: 48, height: 48, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: r.score > 70 ? 'rgba(239, 68, 68, 0.1)' : r.score > 40 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                        fontSize: 16, fontWeight: 800,
-                        color: r.score > 70 ? '#ef4444' : r.score > 40 ? '#f59e0b' : '#10b981',
-                      }}>
+                      <div
+                        className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-extrabold ${
+                          r.score > 70
+                            ? 'bg-red-500/10 text-red-500'
+                            : r.score > 40
+                            ? 'bg-amber-500/10 text-amber-500'
+                            : 'bg-emerald-500/10 text-emerald-500'
+                        }`}
+                      >
                         {r.score}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 }

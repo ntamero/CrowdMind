@@ -9,222 +9,175 @@ import {
   Target,
   Flame,
   Crown,
-  Star,
   Award,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { mockLeaderboard } from '@/lib/mock-data';
-import { formatNumber, getBadgeColor } from '@/lib/utils';
+import { formatNumber, getBadgeColor, cn } from '@/lib/utils';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const rowVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+};
+
+const podiumVariants = {
+  hidden: { opacity: 0, scale: 0.7, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { delay: i * 0.15, duration: 0.5, type: 'spring' as const, stiffness: 200, damping: 18 },
+  }),
+};
 
 export default function LeaderboardPage() {
   const top3 = mockLeaderboard.slice(0, 3);
   const rest = mockLeaderboard.slice(3);
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '20px 0' }}>
+    <div className="mx-auto max-w-3xl px-4 py-5">
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: 40 }}>
-        <div
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: 16,
-            background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 16px',
-          }}
-        >
-          <Trophy size={28} color="white" />
+      <motion.div
+        className="mb-10 text-center"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="mx-auto mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-red-500">
+          <Trophy size={28} className="text-white" />
         </div>
-        <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 8 }}>
+        <h1 className="mb-2 text-4xl font-extrabold text-foreground">
           Global{' '}
-          <span
-            style={{
-              background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
+          <span className="bg-gradient-to-br from-amber-500 to-red-500 bg-clip-text text-transparent">
             Leaderboard
           </span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 15 }}>
+        <p className="text-[15px] text-muted-foreground">
           Top predictors and decision-makers worldwide
         </p>
-      </div>
+      </motion.div>
 
       {/* Top 3 Podium */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 16,
-          marginBottom: 32,
-          alignItems: 'end',
-        }}
-      >
+      <div className="mb-8 grid grid-cols-3 items-end gap-3 sm:gap-4">
         {/* 2nd place */}
         {top3[1] && (
-          <PodiumCard entry={top3[1]} height={200} medal="silver" icon={<Medal size={24} color="#94a3b8" />} />
+          <motion.div custom={1} variants={podiumVariants} initial="hidden" animate="visible">
+            <PodiumCard entry={top3[1]} height="h-[200px]" medal="silver" icon={<Medal size={24} className="text-slate-400" />} />
+          </motion.div>
         )}
         {/* 1st place */}
         {top3[0] && (
-          <PodiumCard entry={top3[0]} height={240} medal="gold" icon={<Crown size={28} color="#f59e0b" />} />
+          <motion.div custom={0} variants={podiumVariants} initial="hidden" animate="visible">
+            <PodiumCard entry={top3[0]} height="h-[240px]" medal="gold" icon={<Crown size={28} className="text-amber-500" />} />
+          </motion.div>
         )}
         {/* 3rd place */}
         {top3[2] && (
-          <PodiumCard entry={top3[2]} height={170} medal="bronze" icon={<Award size={22} color="#cd7f32" />} />
+          <motion.div custom={2} variants={podiumVariants} initial="hidden" animate="visible">
+            <PodiumCard entry={top3[2]} height="h-[170px]" medal="bronze" icon={<Award size={22} className="text-amber-700" />} />
+          </motion.div>
         )}
       </div>
 
       {/* Full Leaderboard Table */}
-      <div className="glass-card" style={{ overflow: 'hidden' }}>
-        <div
-          style={{
-            padding: '16px 24px',
-            borderBottom: '1px solid var(--border)',
-            display: 'grid',
-            gridTemplateColumns: '60px 1fr 100px 100px 80px 60px',
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-          }}
-        >
+      <div className="overflow-hidden bg-card/50 border border-border/30 rounded-xl">
+        {/* Table Header */}
+        <div className="grid grid-cols-[60px_1fr_80px_80px_70px_50px] sm:grid-cols-[60px_1fr_100px_100px_80px_60px] items-center border-b border-border px-4 sm:px-6 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">
           <span>Rank</span>
           <span>User</span>
-          <span style={{ textAlign: 'center' }}>Score</span>
-          <span style={{ textAlign: 'center' }}>Accuracy</span>
-          <span style={{ textAlign: 'center' }}>Streak</span>
-          <span style={{ textAlign: 'center' }}>+/-</span>
+          <span className="text-center">Score</span>
+          <span className="text-center">Accuracy</span>
+          <span className="text-center">Streak</span>
+          <span className="text-center">+/-</span>
         </div>
 
-        {mockLeaderboard.map((entry) => (
-          <div
-            key={entry.rank}
-            style={{
-              padding: '14px 24px',
-              borderBottom: '1px solid var(--border)',
-              display: 'grid',
-              gridTemplateColumns: '60px 1fr 100px 100px 80px 60px',
-              alignItems: 'center',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-card-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            {/* Rank */}
-            <span
-              style={{
-                fontSize: 18,
-                fontWeight: 800,
-                color:
-                  entry.rank === 1
-                    ? '#f59e0b'
-                    : entry.rank === 2
-                    ? '#94a3b8'
-                    : entry.rank === 3
-                    ? '#cd7f32'
-                    : 'var(--text-secondary)',
-              }}
+        {/* Table Rows */}
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          {mockLeaderboard.map((entry) => (
+            <motion.div
+              key={entry.rank}
+              variants={rowVariants}
+              className="grid grid-cols-[60px_1fr_80px_80px_70px_50px] sm:grid-cols-[60px_1fr_100px_100px_80px_60px] items-center border-b border-border/50 px-4 sm:px-6 py-3.5 transition-colors hover:bg-secondary/50"
             >
-              #{entry.rank}
-            </span>
-
-            {/* User */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 10,
-                  background: 'var(--gradient-primary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: 'white',
-                }}
+              {/* Rank */}
+              <span
+                className={cn(
+                  'text-lg font-extrabold',
+                  entry.rank === 1 && 'text-amber-500',
+                  entry.rank === 2 && 'text-slate-400',
+                  entry.rank === 3 && 'text-amber-700',
+                  entry.rank > 3 && 'text-muted-foreground'
+                )}
               >
-                {entry.user.displayName.charAt(0)}
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{entry.user.displayName}</div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: getBadgeColor(entry.user.badge),
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {entry.user.badge}
+                #{entry.rank}
+              </span>
+
+              {/* User */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
+                  {entry.user.displayName.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-foreground">
+                    {entry.user.displayName}
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="mt-0.5 text-[10px] uppercase"
+                    style={{ color: getBadgeColor(entry.user.badge) }}
+                  >
+                    {entry.user.badge}
+                  </Badge>
                 </div>
               </div>
-            </div>
 
-            {/* Score */}
-            <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 700 }}>
-              {formatNumber(entry.score)}
-            </div>
+              {/* Score */}
+              <div className="text-center text-[15px] font-bold text-foreground">
+                {formatNumber(entry.score)}
+              </div>
 
-            {/* Accuracy */}
-            <div style={{ textAlign: 'center' }}>
-              <span
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: 6,
-                  background:
-                    entry.accuracy >= 75
-                      ? 'rgba(16, 185, 129, 0.15)'
-                      : entry.accuracy >= 60
-                      ? 'rgba(245, 158, 11, 0.15)'
-                      : 'rgba(239, 68, 68, 0.15)',
-                  color:
-                    entry.accuracy >= 75
-                      ? '#10b981'
-                      : entry.accuracy >= 60
-                      ? '#f59e0b'
-                      : '#ef4444',
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                {entry.accuracy}%
-              </span>
-            </div>
+              {/* Accuracy */}
+              <div className="flex justify-center">
+                <span
+                  className={cn(
+                    'rounded-md px-2.5 py-1 text-[13px] font-bold',
+                    entry.accuracy >= 75 && 'bg-emerald-500/15 text-emerald-500',
+                    entry.accuracy >= 60 && entry.accuracy < 75 && 'bg-amber-500/15 text-amber-500',
+                    entry.accuracy < 60 && 'bg-red-500/15 text-red-500'
+                  )}
+                >
+                  {entry.accuracy}%
+                </span>
+              </div>
 
-            {/* Streak */}
-            <div
-              style={{
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-                fontSize: 14,
-                fontWeight: 600,
-                color: 'var(--accent)',
-              }}
-            >
-              <Flame size={14} /> {entry.streak}
-            </div>
+              {/* Streak */}
+              <div className="flex items-center justify-center gap-1 text-sm font-semibold text-amber-500">
+                <Flame size={14} /> {entry.streak}
+              </div>
 
-            {/* Change */}
-            <div style={{ textAlign: 'center' }}>
-              {entry.change > 0 ? (
-                <TrendingUp size={16} color="#10b981" />
-              ) : entry.change < 0 ? (
-                <TrendingDown size={16} color="#ef4444" />
-              ) : (
-                <Minus size={16} color="var(--text-muted)" />
-              )}
-            </div>
-          </div>
-        ))}
+              {/* Change */}
+              <div className="flex justify-center">
+                {entry.change > 0 ? (
+                  <TrendingUp size={16} className="text-emerald-500" />
+                ) : entry.change < 0 ? (
+                  <TrendingDown size={16} className="text-red-500" />
+                ) : (
+                  <Minus size={16} className="text-muted-foreground" />
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </div>
   );
@@ -237,55 +190,40 @@ function PodiumCard({
   icon,
 }: {
   entry: (typeof mockLeaderboard)[0];
-  height: number;
+  height: string;
   medal: string;
   icon: React.ReactNode;
 }) {
-  const medalColors: Record<string, string> = {
-    gold: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-    silver: 'linear-gradient(135deg, #94a3b8, #cbd5e1)',
-    bronze: 'linear-gradient(135deg, #cd7f32, #daa520)',
+  const medalGradients: Record<string, string> = {
+    gold: 'bg-gradient-to-br from-amber-500 to-amber-300',
+    silver: 'bg-gradient-to-br from-slate-400 to-slate-300',
+    bronze: 'bg-gradient-to-br from-amber-700 to-yellow-600',
   };
 
   return (
     <div
-      className="glass-card"
-      style={{
+      className={cn(
+        'flex flex-col items-center justify-center rounded-xl border border-border/30 bg-card/50 p-5 text-center backdrop-blur-sm',
         height,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        textAlign: 'center',
-        border: medal === 'gold' ? '1px solid rgba(245, 158, 11, 0.3)' : undefined,
-      }}
+        medal === 'gold' && 'border-amber-500/30'
+      )}
     >
-      <div style={{ marginBottom: 8 }}>{icon}</div>
+      <div className="mb-2">{icon}</div>
       <div
-        style={{
-          width: 50,
-          height: 50,
-          borderRadius: 14,
-          background: medalColors[medal],
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 18,
-          fontWeight: 800,
-          color: 'white',
-          marginBottom: 10,
-        }}
+        className={cn(
+          'mb-2.5 flex h-[50px] w-[50px] items-center justify-center rounded-[14px] text-lg font-extrabold text-white',
+          medalGradients[medal]
+        )}
       >
         {entry.user.displayName.charAt(0)}
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>
+      <div className="mb-0.5 text-[15px] font-bold text-foreground">
         {entry.user.displayName}
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary-light)', marginBottom: 4 }}>
+      <div className="mb-1 text-xl font-extrabold text-primary">
         {formatNumber(entry.score)}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#10b981' }}>
+      <div className="flex items-center gap-1 text-xs text-emerald-500">
         <Target size={12} /> {entry.accuracy}%
       </div>
     </div>

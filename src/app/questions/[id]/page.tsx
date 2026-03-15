@@ -1,15 +1,30 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, BarChart3, MessageSquare, Share2, Bookmark, TrendingUp,
   ArrowUp, ArrowDown, Minus, Sparkles, Clock, Users, Target,
   Lightbulb, ChevronRight, ThumbsUp, Send,
 } from 'lucide-react';
 import { mockQuestions, mockComments } from '@/lib/mock-data';
-import { formatNumber, timeAgo } from '@/lib/utils';
+import { cn, formatNumber, timeAgo } from '@/lib/utils';
 import ShareModal from '@/components/shared/ShareModal';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import type { Question, Comment } from '@/types';
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -10 },
+};
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
 
 export default function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -32,8 +47,8 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
 
   if (!question) {
     return (
-      <div style={{ textAlign: 'center', padding: 80 }}>
-        <h2 style={{ color: 'var(--text-muted)' }}>Question not found</h2>
+      <div className="flex items-center justify-center py-20">
+        <h2 className="text-muted-foreground text-lg">Question not found</h2>
       </div>
     );
   }
@@ -73,281 +88,352 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
 
   const analysis = question.aiAnalysis;
   const trendIcon =
-    analysis?.trendDirection === 'up' ? <ArrowUp size={16} color="#10b981" />
-    : analysis?.trendDirection === 'down' ? <ArrowDown size={16} color="#ef4444" />
-    : <Minus size={16} color="#f59e0b" />;
+    analysis?.trendDirection === 'up' ? <ArrowUp className="size-4 text-emerald-500" />
+    : analysis?.trendDirection === 'down' ? <ArrowDown className="size-4 text-red-500" />
+    : <Minus className="size-4 text-amber-500" />;
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: '20px 0' }}>
+    <div className="mx-auto max-w-[800px] py-5">
       {/* Question Header */}
-      <div className="glass-card" style={{ padding: 32, marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: 14, background: 'var(--gradient-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 700, color: 'white',
-          }}>
+      <motion.div
+        className="mb-5 rounded-xl border border-border/30 bg-card/50 p-8 backdrop-blur-sm"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex size-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-indigo-500 to-purple-600 text-lg font-bold text-white">
             {question.user.displayName.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>{question.user.displayName}</div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Clock size={12} /> {timeAgo(question.createdAt)}
-              <span style={{ margin: '0 4px' }}>·</span>
-              <Users size={12} /> {formatNumber(question.totalVotes)} votes
+            <div className="text-base font-bold text-foreground">{question.user.displayName}</div>
+            <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+              <Clock className="size-3" /> {timeAgo(question.createdAt)}
+              <span className="mx-1">·</span>
+              <Users className="size-3" /> {formatNumber(question.totalVotes)} votes
             </div>
           </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <div className="ml-auto flex gap-2">
             {question.status === 'trending' && (
-              <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-                <TrendingUp size={12} /> Trending
-              </span>
+              <Badge variant="destructive" className="gap-1">
+                <TrendingUp className="size-3" /> Trending
+              </Badge>
             )}
           </div>
         </div>
 
-        <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, lineHeight: 1.3 }}>
+        <h1 className="mb-3 text-[28px] font-extrabold leading-tight text-foreground">
           {question.title}
         </h1>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20 }}>
+        <p className="mb-5 text-base leading-relaxed text-muted-foreground">
           {question.description}
         </p>
 
         {/* Tags */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 24 }}>
+        <div className="mb-6 flex flex-wrap gap-1.5">
           {question.tags.map((tag) => (
-            <span key={tag} className="tag">#{tag}</span>
+            <span
+              key={tag}
+              className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-medium text-indigo-400 transition-colors hover:bg-indigo-500/20"
+            >
+              #{tag}
+            </span>
           ))}
         </div>
 
         {/* Voting Options */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+        <motion.div
+          className="mb-5 flex flex-col gap-3"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
           {question.options.map((option) => {
             const isVoted = voted === option.id;
             const showResults = !!voted;
             return (
-              <button
+              <motion.button
                 key={option.id}
+                variants={fadeInUp}
                 onClick={() => handleVote(option.id)}
                 disabled={!!voted}
-                style={{
-                  position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '16px 20px', borderRadius: 14,
-                  border: isVoted ? `2px solid ${option.color}` : '1px solid var(--border)',
-                  background: 'var(--bg-card)', cursor: voted ? 'default' : 'pointer',
-                  overflow: 'hidden', transition: 'all 0.3s',
-                  color: 'var(--text-primary)', fontSize: 15, fontWeight: 600, width: '100%', textAlign: 'left',
-                }}
+                className={cn(
+                  'relative flex w-full items-center justify-between overflow-hidden rounded-[14px] border bg-card px-5 py-4 text-left text-[15px] font-semibold text-foreground transition-all duration-300',
+                  isVoted
+                    ? 'border-2'
+                    : 'border-border/50 hover:border-indigo-500/40 hover:bg-card/80',
+                  voted ? 'cursor-default' : 'cursor-pointer'
+                )}
+                style={isVoted ? { borderColor: option.color } : undefined}
               >
                 {showResults && (
-                  <div className="vote-bar" style={{
-                    position: 'absolute', left: 0, top: 0, bottom: 0,
-                    width: `${option.percentage}%`, background: `${option.color}18`, borderRadius: 14,
-                  }} />
+                  <motion.div
+                    className="vote-bar absolute inset-y-0 left-0 rounded-[14px]"
+                    style={{ backgroundColor: `${option.color}18` }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${option.percentage}%` }}
+                    transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                  />
                 )}
-                <span style={{ position: 'relative', zIndex: 1 }}>{option.text}</span>
+                <span className="relative z-10">{option.text}</span>
                 {showResults && (
-                  <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{formatNumber(option.votes)}</span>
-                    <span style={{ fontWeight: 800, color: option.color, fontSize: 18 }}>{option.percentage}%</span>
-                  </div>
+                  <motion.div
+                    className="relative z-10 flex items-center gap-2.5"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <span className="text-[13px] text-muted-foreground">{formatNumber(option.votes)}</span>
+                    <span className="text-lg font-extrabold" style={{ color: option.color }}>
+                      {option.percentage}%
+                    </span>
+                  </motion.div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn-secondary" onClick={() => setShowComments(!showComments)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <MessageSquare size={16} /> {comments.length} Comments
-          </button>
-          <button className="btn-secondary" onClick={() => setShowShare(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Share2 size={16} /> Share
-          </button>
-          <button className="btn-secondary" onClick={() => setBookmarked(!bookmarked)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Bookmark size={16} fill={bookmarked ? 'var(--accent)' : 'none'} color={bookmarked ? 'var(--accent)' : 'currentColor'} />
+        <div className="flex gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowComments(!showComments)}
+            className="gap-1.5"
+          >
+            <MessageSquare className="size-4" /> {comments.length} Comments
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowShare(true)}
+            className="gap-1.5"
+          >
+            <Share2 className="size-4" /> Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBookmarked(!bookmarked)}
+            className={cn('gap-1.5', bookmarked && 'border-indigo-500/40 text-indigo-400')}
+          >
+            <Bookmark
+              className="size-4"
+              fill={bookmarked ? 'currentColor' : 'none'}
+            />
             {bookmarked ? 'Saved' : 'Save'}
-          </button>
+          </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* AI Analysis Panel */}
-      {analysis && (voted || showAI) && (
-        <div className="glass-card" style={{ padding: 32, marginBottom: 20, border: '1px solid rgba(99, 102, 241, 0.25)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 12, background: 'var(--gradient-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Brain size={22} color="white" />
-            </div>
-            <div>
-              <h3 style={{ fontSize: 18, fontWeight: 700 }}>AI Analysis</h3>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Sparkles size={12} color="var(--primary-light)" />
-                Confidence: {analysis.confidence}%
-                <span style={{ margin: '0 4px' }}>·</span>
-                Trend: {trendIcon}
+      <AnimatePresence>
+        {analysis && (voted || showAI) && (
+          <motion.div
+            className="mb-5 rounded-xl border border-indigo-500/25 bg-card/50 p-8 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 30, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          >
+            <div className="mb-6 flex items-center gap-2.5">
+              <div className="flex size-[42px] items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                <Brain className="size-[22px] text-white" />
               </div>
-            </div>
-          </div>
-
-          <div style={{
-            padding: 16, borderRadius: 12, background: 'rgba(99, 102, 241, 0.08)',
-            marginBottom: 20, fontSize: 15, lineHeight: 1.6, color: 'var(--text-secondary)',
-          }}>
-            {analysis.summary}
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Lightbulb size={16} color="var(--accent)" /> Key Insights
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {analysis.insights.map((insight, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 14px',
-                  borderRadius: 10, background: 'var(--bg-card)', fontSize: 14, color: 'var(--text-secondary)',
-                }}>
-                  <ChevronRight size={16} color="var(--primary-light)" style={{ marginTop: 2, flexShrink: 0 }} />
-                  {insight}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {analysis.recommendation && (
-            <div style={{
-              padding: 16, borderRadius: 12,
-              background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.15)',
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-            }}>
-              <Target size={18} color="#10b981" style={{ marginTop: 2, flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#10b981', marginBottom: 4 }}>AI Recommendation</div>
-                <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{analysis.recommendation}</div>
-              </div>
-            </div>
-          )}
-
-          {analysis.demographics && (
-            <div style={{ marginTop: 20 }}>
-              <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Vote Distribution by Age</h4>
-              <div style={{ display: 'flex', gap: 12 }}>
-                {analysis.demographics.map((demo) => (
-                  <div key={demo.label} style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ height: 80, borderRadius: 8, background: 'var(--bg-card)', position: 'relative', overflow: 'hidden', marginBottom: 6 }}>
-                      <div className="vote-bar" style={{
-                        position: 'absolute', bottom: 0, left: 0, right: 0,
-                        height: `${demo.value}%`, background: 'var(--gradient-primary)', borderRadius: 8,
-                      }} />
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 600 }}>{demo.value}%</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{demo.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Prompt to vote */}
-      {!voted && (
-        <div className="glass-card" style={{ padding: 24, textAlign: 'center', border: '1px solid rgba(245, 158, 11, 0.2)', marginBottom: 20 }}>
-          <Sparkles size={24} color="var(--accent)" style={{ marginBottom: 8 }} />
-          <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Vote to unlock AI Analysis</p>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Cast your vote above to see AI-powered insights and recommendations</p>
-        </div>
-      )}
-
-      {/* Comments Section */}
-      {showComments && (
-        <div className="glass-card" style={{ padding: 24 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <MessageSquare size={20} color="var(--primary-light)" />
-            Comments ({comments.length})
-          </h3>
-
-          {/* Add comment */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, background: 'var(--gradient-primary)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0,
-            }}>
-              A
-            </div>
-            <div style={{ flex: 1 }}>
-              <textarea
-                placeholder="Share your thoughts..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                rows={2}
-                style={{ marginBottom: 8, resize: 'vertical' }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  className="btn-glow"
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                  style={{
-                    padding: '8px 20px', fontSize: 13,
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    opacity: newComment.trim() ? 1 : 0.5,
-                  }}
-                >
-                  <Send size={14} /> Post
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Comments list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {comments.map((comment) => (
-              <div key={comment.id} style={{
-                padding: 16, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 10, background: 'var(--gradient-primary)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 13, fontWeight: 700, color: 'white',
-                  }}>
-                    {comment.user.displayName.charAt(0)}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{comment.user.displayName}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{timeAgo(comment.createdAt)}</div>
-                  </div>
+                <h3 className="text-lg font-bold text-foreground">AI Analysis</h3>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Sparkles className="size-3 text-indigo-400" />
+                  Confidence: {analysis.confidence}%
+                  <span className="mx-1">·</span>
+                  Trend: {trendIcon}
                 </div>
-                <p style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text-secondary)', marginBottom: 10 }}>
-                  {comment.text}
-                </p>
-                <button style={{
-                  display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
-                  borderRadius: 8, background: 'transparent', border: '1px solid var(--border)',
-                  color: comment.isLiked ? 'var(--primary-light)' : 'var(--text-muted)',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                }}>
-                  <ThumbsUp size={13} /> {comment.likes}
-                </button>
               </div>
-            ))}
+            </div>
 
-            {comments.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)', fontSize: 14 }}>
-                No comments yet. Be the first to share your thoughts!
+            <motion.div
+              className="mb-5 rounded-xl bg-indigo-500/[0.08] p-4 text-[15px] leading-relaxed text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {analysis.summary}
+            </motion.div>
+
+            <div className="mb-5">
+              <h4 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-foreground">
+                <Lightbulb className="size-4 text-amber-500" /> Key Insights
+              </h4>
+              <motion.div
+                className="flex flex-col gap-2"
+                variants={staggerContainer}
+                initial="initial"
+                animate="animate"
+              >
+                {analysis.insights.map((insight, i) => (
+                  <motion.div
+                    key={i}
+                    variants={fadeInUp}
+                    className="flex items-start gap-2 rounded-[10px] bg-card p-2.5 px-3.5 text-sm text-muted-foreground"
+                  >
+                    <ChevronRight className="mt-0.5 size-4 shrink-0 text-indigo-400" />
+                    {insight}
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+
+            {analysis.recommendation && (
+              <motion.div
+                className="flex items-start gap-2.5 rounded-xl border border-emerald-500/15 bg-emerald-500/[0.08] p-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Target className="mt-0.5 size-[18px] shrink-0 text-emerald-500" />
+                <div>
+                  <div className="mb-1 text-[13px] font-bold text-emerald-500">AI Recommendation</div>
+                  <div className="text-sm leading-normal text-muted-foreground">{analysis.recommendation}</div>
+                </div>
+              </motion.div>
+            )}
+
+            {analysis.demographics && (
+              <div className="mt-5">
+                <h4 className="mb-3 text-sm font-bold text-foreground">Vote Distribution by Age</h4>
+                <div className="flex gap-3">
+                  {analysis.demographics.map((demo) => (
+                    <div key={demo.label} className="flex-1 text-center">
+                      <div className="relative mb-1.5 h-20 overflow-hidden rounded-lg bg-card">
+                        <motion.div
+                          className="absolute inset-x-0 bottom-0 rounded-lg bg-gradient-to-t from-indigo-500 to-purple-600"
+                          initial={{ height: 0 }}
+                          animate={{ height: `${demo.value}%` }}
+                          transition={{ duration: 0.8, delay: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                        />
+                      </div>
+                      <div className="text-xs font-semibold text-foreground">{demo.value}%</div>
+                      <div className="text-[11px] text-muted-foreground">{demo.label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Prompt to vote */}
+      <AnimatePresence>
+        {!voted && (
+          <motion.div
+            className="mb-5 rounded-xl border border-amber-500/20 bg-card/50 p-6 text-center backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Sparkles className="mx-auto mb-2 size-6 text-amber-500" />
+            <p className="mb-1 text-[15px] font-semibold text-foreground">Vote to unlock AI Analysis</p>
+            <p className="text-[13px] text-muted-foreground">Cast your vote above to see AI-powered insights and recommendations</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Comments Section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            className="rounded-xl border border-border/30 bg-card/50 p-6 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+          >
+            <h3 className="mb-5 flex items-center gap-2 text-lg font-bold text-foreground">
+              <MessageSquare className="size-5 text-indigo-400" />
+              Comments ({comments.length})
+            </h3>
+
+            {/* Add comment */}
+            <div className="mb-6 flex gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
+                A
+              </div>
+              <div className="flex-1">
+                <Textarea
+                  placeholder="Share your thoughts..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows={2}
+                  className="mb-2 resize-y bg-card/80"
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    size="sm"
+                    className={cn(
+                      'gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700',
+                      !newComment.trim() && 'opacity-50'
+                    )}
+                  >
+                    <Send className="size-3.5" /> Post
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="mb-5" />
+
+            {/* Comments list */}
+            <motion.div
+              className="flex flex-col gap-4"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {comments.map((comment) => (
+                <motion.div
+                  key={comment.id}
+                  variants={fadeInUp}
+                  className="rounded-xl border border-border/50 bg-card p-4"
+                >
+                  <div className="mb-2.5 flex items-center gap-2.5">
+                    <div className="flex size-[34px] items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-purple-600 text-[13px] font-bold text-white">
+                      {comment.user.displayName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-foreground">{comment.user.displayName}</div>
+                      <div className="text-[11px] text-muted-foreground">{timeAgo(comment.createdAt)}</div>
+                    </div>
+                  </div>
+                  <p className="mb-2.5 text-sm leading-normal text-muted-foreground">
+                    {comment.text}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    className={cn(
+                      'gap-1.5',
+                      comment.isLiked ? 'border-indigo-500/40 text-indigo-400' : 'text-muted-foreground'
+                    )}
+                  >
+                    <ThumbsUp className="size-3" /> {comment.likes}
+                  </Button>
+                </motion.div>
+              ))}
+
+              {comments.length === 0 && (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No comments yet. Be the first to share your thoughts!
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Share Modal */}
       <ShareModal
