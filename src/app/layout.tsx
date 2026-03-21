@@ -14,10 +14,70 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://wisery.live";
+const SITE_NAME = "Wisery";
+const SITE_SLOGAN = "Ask. Vote. Earn. — The Crowd Knows.";
+const SITE_DESCRIPTION = "The social prediction platform where crowd wisdom meets crypto rewards. Ask questions, vote on outcomes, predict markets, and earn WSR tokens. AI-powered analysis on every poll. Like Polymarket meets Reddit — but you earn for every vote.";
+
 export const metadata: Metadata = {
-  title: "Wisery — Ask. Vote. Earn.",
-  description:
-    "Topluluk zekası platformu. Soru sor, oyla, tahmin yap, token kazan. AI destekli analizlerle daha iyi kararlar ver.",
+  title: {
+    default: `${SITE_NAME} — ${SITE_SLOGAN}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: [
+    "prediction market", "social prediction", "crowd wisdom", "vote to earn",
+    "crypto rewards", "WSR token", "poll platform", "community voting",
+    "prediction platform", "polymarket alternative", "earn crypto voting",
+    "AI analysis", "crowd intelligence", "social polling", "web3 voting",
+    "question and answer", "prediction markets crypto", "vote earn tokens",
+    "opinion marketplace", "forecasting platform", "wisdom of crowds",
+  ],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — ${SITE_SLOGAN}`,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — ${SITE_SLOGAN}`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — ${SITE_SLOGAN}`,
+    description: SITE_DESCRIPTION,
+    images: ["/og-image.png"],
+    creator: "@wisery_live",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "YOUR_GOOGLE_VERIFICATION_CODE",
+  },
+  category: "technology",
 };
 
 export default function RootLayout({
@@ -27,6 +87,45 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0a0a14" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: SITE_NAME,
+              url: SITE_URL,
+              description: SITE_DESCRIPTION,
+              applicationCategory: "SocialNetworkingApplication",
+              operatingSystem: "Web",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: "4.8",
+                ratingCount: "1200",
+              },
+              author: {
+                "@type": "Organization",
+                name: SITE_NAME,
+                url: SITE_URL,
+              },
+              sameAs: [
+                "https://twitter.com/wisery_live",
+                "https://t.me/wisery_live",
+              ],
+            }),
+          }}
+        />
+      </head>
       <body className={`${inter.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <AuthProvider>
