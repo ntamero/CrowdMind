@@ -100,7 +100,7 @@ async function main() {
   await client.connect();
 
   // Get MIA user
-  const miaRes = await client.query("SELECT id FROM \"User\" WHERE username = 'MIA' LIMIT 1");
+  const miaRes = await client.query("SELECT id FROM \"User\" WHERE username ILIKE 'mia' LIMIT 1");
   if (miaRes.rows.length === 0) {
     console.log('MIA user not found! Run seed-raw.js first.');
     await client.end();
