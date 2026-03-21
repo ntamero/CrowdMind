@@ -1,11 +1,12 @@
-# CROWDMIND AI - Project Soul & Progress Tracker
+# CROWDMIND / WISERY — Project Soul & Progress Tracker
 
 ## Project Identity
-- **Name:** CrowdMind AI
-- **Vision:** Global AI-powered collective intelligence platform (Reddit + Twitter + Polymarket + Facebook + AI fusion)
+- **Name:** Wisery (CrowdMind)
+- **Vision:** Social prediction & voting platform — Ask, Vote, Earn WSR tokens
+- **Live URL:** https://wisery.live
 - **GitHub:** https://github.com/ntamero/CrowdMind
-- **Live URL:** https://crowd-mind-rho.vercel.app/
 - **Owner:** TAMER
+- **Domain:** wisery.live (Namecheap DNS → Hetzner VPS)
 
 ---
 
@@ -14,175 +15,146 @@
 |-------|-----------|
 | Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript |
-| UI Library | Shadcn/UI v4 (@base-ui/react, NOT radix) |
-| Animations | Framer Motion (stagger, spring, AnimatePresence) |
-| Styling | Tailwind CSS v4 (dark theme default) |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (Google/GitHub OAuth) |
-| AI Providers | Groq -> OpenRouter -> Claude (multi-provider fallback) |
-| Deploy | Vercel (GitHub auto-deploy) |
-| Web3 (planned) | Base chain (Coinbase L2) |
+| Database | PostgreSQL 16 (Prisma 7 ORM) |
+| Auth | Custom JWT (email/password + wallet SIWE) |
+| UI | Tailwind 4 + shadcn/ui + Framer Motion |
+| AI | Groq (MIA engine) |
+| Web3 | ethers.js v6 + MetaMask |
+| Blockchain | Polygon Amoy Testnet (Chain ID: 80002) |
+| Token | WSR (ERC-20) — 1B supply |
+| Deploy | Hetzner VPS (Ubuntu 24.04) + PM2 + Nginx |
+
+---
+
+## WSR Token Economy
+| Parameter | Value |
+|-----------|-------|
+| Token Name | Wisery (WSR) |
+| Network | Polygon Amoy Testnet |
+| Contract (v1) | `0x56df3739cc0510151897424CD662060066a4Ab97` |
+| Deployer Wallet | `0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119` |
+| Total Supply | 1,000,000,000 WSR |
+| XP → WSR Rate | 250 XP = 1 WSR |
+| Conversion Fee | 10 XP per transaction (→ 0.04 WSR to pool) |
+| WSR → XP Rate | 1 WSR = 250 XP (- 10 XP fee) |
+| WSR Price | 1 WSR = $0.001 (testnet) |
+| Min Conversion | 1 WSR (260 XP minimum) |
+| Cooldown | 1 hour between XP→WSR conversions |
+
+### XP Earning Methods
+| Action | XP Reward |
+|--------|-----------|
+| Vote on question | +1 XP |
+| Create question | +3 XP |
+| Leave comment | +1 XP |
+| Correct prediction | +5 XP |
+| Level up | Every 1000 XP = +1 Level |
+
+### Pool Wallet (Fee Collection)
+- **Address:** `0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119`
+- **Purpose:** Collects 0.04 WSR fee from every XP↔WSR conversion
+- **Visible in:** Admin Panel → Wallets tab
+- **Withdrawal:** Admin can transfer pool WSR to personal MetaMask
+
+---
+
+## VPS Deployment
+| Detail | Value |
+|--------|-------|
+| VPS | Hetzner, IP `37.27.247.119`, Ubuntu 24.04, 16GB RAM |
+| Port | 3200 |
+| PM2 Process | `wisery` |
+| Nginx | /etc/nginx/sites-available/wisery |
+| Code Path | /var/www/wisery |
+| SSL | Let's Encrypt (auto-renew) |
+| PostgreSQL | user: wisery, db: wisery_db |
+
+### Deploy Command
+```bash
+ssh root@37.27.247.119
+cd /var/www/wisery && git pull origin master
+npx prisma db push && npx prisma generate
+npx next build && pm2 restart wisery
+```
 
 ---
 
 ## Core Features & Status
 
-### Completed Features
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Homepage | DONE | 3-column grid, featured markets carousel, category pills, sort tabs, live activity feed, quick stats |
-| Predictions Page | DONE | 3-column grid, countdown timers, probability overlays, sparklines, betting-style options |
-| QuestionCard Component | DONE | Compact vertical card: image top, probability overlay, sparkline, vote buttons, progress bars, earn indicator |
-| SparklineChart | DONE | SVG sparkline with gradient fill and pulsing glow |
-| MiniDonutChart | DONE | SVG donut ring with CSS animation |
-| Featured Markets | DONE | Horizontal scrollable carousel (6 markets with images, YES%, sparklines) |
-| Category System | DONE | 10 categories with emoji + color glow |
-| AI Analysis Page | DONE | AI insights and analysis reports |
-| Leaderboard | DONE | Top predictors ranking |
-| Profile Page | DONE | User stats, achievements, recent questions |
-| Settings Page | DONE | User settings |
-| Pricing Page | DONE | Free/Pro/Premium cards with FAQ (visual only, not yet functional) |
-| Auth System | DONE | Supabase Auth with Google/GitHub OAuth |
-| Navbar | DONE | Logo, search, nav links, user dropdown, mobile menu |
-| Sidebar | DONE | Menu links, topics, live stats |
-| Question Detail | DONE | Dynamic route /questions/[id] |
-| Ask Page | DONE | Question creation form |
-| Member Dashboard | DONE | /dashboard - Overview, My Questions, Create Question, Earnings, Wallet tabs |
-| Notification System | DONE | NotificationDropdown component |
-| Share Modal | DONE | Social sharing for questions |
-| Mock Data | DONE | Full mock data with Unsplash images, trend data, volumes |
+### Completed
+| Feature | Description |
+|---------|-------------|
+| Auth System | Email/password registration, JWT sessions, email verification |
+| Wallet Connect | MetaMask SIWE, Polygon Amoy, auto-reconnect |
+| XP Wallet | Per-user XP tracking, earn from votes/questions/comments |
+| WSR Token | ERC-20 on Polygon Amoy, 1B supply |
+| XP → WSR Conversion | 250 XP = 1 WSR, 10 XP fee, 1hr cooldown |
+| WSR → XP Conversion | 1 WSR = 240 XP (250 - 10 fee) |
+| Pool Wallet | Fee collection (0.04 WSR per conversion), admin visible |
+| Admin Panel (Real Data) | Overview, Users, Questions, Categories, Earnings, Wallets, Transactions, Timers |
+| Dashboard | Overview stats, my questions, create question, earnings, wallet tab |
+| Question System | Create, vote, options, categories, expiry, images |
+| Leaderboard | Top users by reputation/XP |
+| Predictions | Prediction markets with participation |
+| Feed | Social feed with posts |
+| Earn Page | Daily tasks, achievements, earning methods |
+| Token Page | WSR token info and guide |
+| Comments | Nested comments with likes |
+| MIA AI | AI analysis engine (Groq) |
+| Seed Script | 30+ questions with Pexels images |
 
-### In Progress
-| Feature | Status | Description |
-|---------|--------|-------------|
-| Admin Panel Rebuild | IN PROGRESS | Full expansion: categories CRUD, revenue/visitor/earnings/wallet tracking, options, trading, mail system |
-| Navigation Update | PENDING | Add Dashboard link to Sidebar & Navbar |
-| Pricing Functional | PENDING | Make Free/Pro/Premium selection work |
+### Database Models (Prisma)
+User, Session, Question, QuestionOption, Vote, Comment, CommentLike, Prediction, PredictionOption, PredictionParticipation, Post, PostLike, Follow, TokenTransaction, PoolWallet, PoolTransaction, Bookmark, Notification, UserAchievement, Hashtag
 
-### Planned (Future)
-| Feature | Status | Description |
-|---------|--------|-------------|
-| MetaMask/Web3 Wallet | PLANNED | Base chain integration (last stage, after site is fully active) |
-| Real-time Voting | PLANNED | WebSocket-based live updates |
-| Referral System | PLANNED | Invite friends, earn rewards |
-| Mobile App | PLANNED | Flutter-based mobile application |
-| API | PLANNED | Public API for developers |
-
----
-
-## File Structure (Key Files)
-
+### Key Files
 ```
-src/
-├── app/
-│   ├── page.tsx                    # Homepage (3-col grid, featured markets)
-│   ├── layout.tsx                  # Root layout
-│   ├── admin/page.tsx              # Admin panel
-│   ├── ai-analysis/page.tsx        # AI analysis page
-│   ├── ask/page.tsx                # Create question
-│   ├── auth/page.tsx               # Auth page
-│   ├── auth/callback/route.ts      # OAuth callback
-│   ├── dashboard/page.tsx          # Member dashboard (NEW)
-│   ├── leaderboard/page.tsx        # Leaderboard
-│   ├── predictions/page.tsx        # Predictions (3-col grid)
-│   ├── pricing/page.tsx            # Pricing plans
-│   ├── profile/page.tsx            # User profile
-│   ├── questions/[id]/page.tsx     # Question detail
-│   ├── settings/page.tsx           # Settings
-│   └── api/                        # API routes (ai, questions, predictions, votes, comments, users)
-├── components/
-│   ├── layout/
-│   │   ├── Navbar.tsx              # Top navigation
-│   │   └── Sidebar.tsx             # Left sidebar
-│   ├── questions/
-│   │   └── QuestionCard.tsx        # Compact vertical question card
-│   ├── shared/
-│   │   ├── SparklineChart.tsx      # SVG sparkline
-│   │   ├── MiniDonutChart.tsx      # SVG donut
-│   │   ├── ShareModal.tsx          # Share dialog
-│   │   ├── StatsBar.tsx            # Stats display
-│   │   └── NotificationDropdown.tsx # Notifications
-│   └── ui/                         # Shadcn/UI components (14 files)
-├── lib/
-│   ├── mock-data.ts                # All mock data
-│   ├── utils.ts                    # Utilities
-│   ├── database.ts                 # DB queries
-│   ├── ai-providers.ts             # AI integration
-│   └── supabase/                   # Supabase client/server/middleware/auth
-├── types/index.ts                  # TypeScript types
-├── hooks/                          # (empty, for future)
-├── context/                        # (empty, for future)
-└── middleware.ts                    # Session management
+src/app/wallet/page.tsx          — XP↔WSR conversion UI (two-way)
+src/app/dashboard/page.tsx       — User dashboard (XP/WSR units)
+src/app/admin/page.tsx           — Admin panel (real DB data)
+src/app/earn/page.tsx            — Earning methods & daily tasks
+src/app/api/wallet/claim/route.ts   — XP → WSR API
+src/app/api/wallet/deposit/route.ts — WSR → XP API
+src/app/api/wallet/balance/route.ts — On-chain balance check
+src/app/api/wallet/connect/route.ts — MetaMask SIWE connection
+src/app/api/admin/stats/route.ts    — Admin dashboard data
+src/app/api/admin/pool/route.ts     — Pool wallet data
+src/context/WalletContext.tsx    — MetaMask state provider
+src/lib/auth.ts                  — JWT auth helpers
+src/lib/database.ts              — XP award functions
+src/lib/prisma.ts                — Prisma client
+prisma/schema.prisma             — Database schema
+contracts/WiseryToken.sol        — ERC-20 contract
+token-deploy/                    — Hardhat deployment
 ```
 
 ---
 
-## Design Principles
-- **Images:** Unsplash photos matching each topic (not random)
-- **Layout:** 3-column grid for cards (sm:2, lg:3)
-- **Cards:** Compact vertical: image top (130px), probability overlay, sparkline, vote options with progress bars
-- **Colors:** Dark theme, indigo/purple/cyan accent palette
-- **Typography:** Font-black headings, tight tracking
-- **Animations:** Framer Motion stagger entries, spring transitions
-- **Data Display:** SparklineCharts, progress bars, percentage badges, countdown timers
-- **Earn Indicator:** Every card shows "Earn" with DollarSign icon
-- **Full-width:** No max-width constraints on content area
+## Access Levels
+| Feature | Email Only | Wallet Connected |
+|---------|:----------:|:----------------:|
+| View feed, questions | ✅ | ✅ |
+| MIA AI analysis | ✅ | ✅ |
+| Leaderboard | ✅ | ✅ |
+| Comments | ✅ | ✅ |
+| Vote / Predict | ✅ | ✅ |
+| Create questions | ✅ | ✅ |
+| Earn XP | ✅ | ✅ |
+| Convert XP ↔ WSR | ✅ | ✅ |
+| Withdraw WSR on-chain | ❌ | ✅ |
 
 ---
 
-## Important Notes
-- Shadcn/UI v4 uses @base-ui/react — `asChild` NOT supported
-- Framer Motion ease arrays need `as const` to fix TypeScript errors
-- Using `<img>` tags (not Next Image) for Unsplash URLs reliability
-- next.config.ts has remotePatterns for picsum.photos, images.unsplash.com
-- Categories are manageable from admin panel (planned)
-- Users earn money from their questions — unique differentiator
-- Questions are time-limited with countdown timers
-- System supports ALL types of questions (personal, general, everything)
+## Pending / Next Steps
+- [ ] On-chain WSR deposit: Transfer WSR from MetaMask → site (credit XP)
+- [ ] Admin WSR withdrawal: Transfer pool WSR to admin MetaMask
+- [ ] Deploy v2 contract (Pausable, daily limits, batch rewards)
+- [ ] Cron job: auto-distribute pending WSR claims on-chain
+- [ ] Real-time voting (WebSocket/Supabase Realtime)
+- [ ] Telegram bot integration
+- [ ] Follow system / social features
+- [ ] Referral system
+- [ ] Mobile optimization
 
 ---
 
-## Admin Panel Requirements (Detailed)
-1. **Kategori CRUD** — Add/edit/delete categories from admin
-2. **Reklam Yonetimi** — Ad management system
-3. **Gelir Takibi** — Revenue tracking dashboard
-4. **Ziyaretci Takibi** — Visitor analytics
-5. **Kazanc Takibi** — Platform earnings tracking
-6. **Uye Kazanc Takibi** — Member individual earnings
-7. **Cuzdan Takibi** — Wallet tracking for all users
-8. **Opsiyon Sistemler** — Options/betting system management
-9. **Trading Takibi** — Trading activity monitoring
-10. **Sure Takibi** — Time/duration tracking for questions
-11. **Mail Sistemi** — Email notification system
-12. **Wallet Sistemi** — Individual wallet per user
-
----
-
-## Member Dashboard Features (/dashboard)
-1. **Overview** — Quick stats (earned, balance, questions, accuracy), recent questions, earnings summary, recent transactions
-2. **My Questions** — 3-col grid of user's questions with edit/delete, status badges
-3. **Create Question** — Full form: title, description, category, duration, options (2-6), earn info
-4. **Earnings** — Daily/weekly/monthly/all-time, breakdown (questions/predictions/referrals), daily chart, top earning questions
-5. **Wallet** — Balance card, pending earnings, withdraw button, Web3 connect, transaction history
-
----
-
-## Pricing Packages
-| Package | Price | Key Features |
-|---------|-------|-------------|
-| Free | $0 | 5 questions/day, basic voting, 3 predictions/week |
-| Pro | $9.99/mo | Unlimited questions, full AI analysis, export data, 2x rewards |
-| Premium/Enterprise | $49.99/mo | Everything in Pro + API access, white-label, custom analytics, 3x rewards |
-
----
-
-## Commit History (Key)
-1. `feat: complete visual revolution - Polymarket-quality UI overhaul` — Images, sparklines, featured markets
-2. `fix: wider layout, relevant images, earning indicator` — Unsplash images, full-width, earn badges
-3. `feat: 3-column predictions grid, countdown timers, compact cards` — Predictions redesign
-4. `feat: convert homepage to 3-column grid with compact vertical cards` — Homepage 3-col
-5. `feat: member dashboard with earnings, wallet, question creation` — Dashboard (next commit)
-
----
-
-*Last updated: 2026-03-15*
+*Last updated: 2026-03-21*
