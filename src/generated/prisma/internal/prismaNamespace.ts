@@ -1967,6 +1967,8 @@ export const UserScalarFieldEnum = {
   walletAddress: 'walletAddress',
   walletChain: 'walletChain',
   walletVerified: 'walletVerified',
+  siteWalletAddress: 'siteWalletAddress',
+  siteWalletKey: 'siteWalletKey',
   unclaimedWSR: 'unclaimedWSR',
   totalClaimedWSR: 'totalClaimedWSR',
   createdAt: 'createdAt',

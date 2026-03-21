@@ -77,6 +77,8 @@ export type UserMinAggregateOutputType = {
   walletAddress: string | null
   walletChain: string | null
   walletVerified: boolean | null
+  siteWalletAddress: string | null
+  siteWalletKey: string | null
   unclaimedWSR: number | null
   totalClaimedWSR: number | null
   createdAt: Date | null
@@ -108,6 +110,8 @@ export type UserMaxAggregateOutputType = {
   walletAddress: string | null
   walletChain: string | null
   walletVerified: boolean | null
+  siteWalletAddress: string | null
+  siteWalletKey: string | null
   unclaimedWSR: number | null
   totalClaimedWSR: number | null
   createdAt: Date | null
@@ -139,6 +143,8 @@ export type UserCountAggregateOutputType = {
   walletAddress: number
   walletChain: number
   walletVerified: number
+  siteWalletAddress: number
+  siteWalletKey: number
   unclaimedWSR: number
   totalClaimedWSR: number
   createdAt: number
@@ -198,6 +204,8 @@ export type UserMinAggregateInputType = {
   walletAddress?: true
   walletChain?: true
   walletVerified?: true
+  siteWalletAddress?: true
+  siteWalletKey?: true
   unclaimedWSR?: true
   totalClaimedWSR?: true
   createdAt?: true
@@ -229,6 +237,8 @@ export type UserMaxAggregateInputType = {
   walletAddress?: true
   walletChain?: true
   walletVerified?: true
+  siteWalletAddress?: true
+  siteWalletKey?: true
   unclaimedWSR?: true
   totalClaimedWSR?: true
   createdAt?: true
@@ -260,6 +270,8 @@ export type UserCountAggregateInputType = {
   walletAddress?: true
   walletChain?: true
   walletVerified?: true
+  siteWalletAddress?: true
+  siteWalletKey?: true
   unclaimedWSR?: true
   totalClaimedWSR?: true
   createdAt?: true
@@ -378,6 +390,8 @@ export type UserGroupByOutputType = {
   walletAddress: string | null
   walletChain: string | null
   walletVerified: boolean
+  siteWalletAddress: string | null
+  siteWalletKey: string | null
   unclaimedWSR: number
   totalClaimedWSR: number
   createdAt: Date
@@ -432,6 +446,8 @@ export type UserWhereInput = {
   walletAddress?: Prisma.StringNullableFilter<"User"> | string | null
   walletChain?: Prisma.StringNullableFilter<"User"> | string | null
   walletVerified?: Prisma.BoolFilter<"User"> | boolean
+  siteWalletAddress?: Prisma.StringNullableFilter<"User"> | string | null
+  siteWalletKey?: Prisma.StringNullableFilter<"User"> | string | null
   unclaimedWSR?: Prisma.FloatFilter<"User"> | number
   totalClaimedWSR?: Prisma.FloatFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -477,6 +493,8 @@ export type UserOrderByWithRelationInput = {
   walletAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   walletChain?: Prisma.SortOrderInput | Prisma.SortOrder
   walletVerified?: Prisma.SortOrder
+  siteWalletAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  siteWalletKey?: Prisma.SortOrderInput | Prisma.SortOrder
   unclaimedWSR?: Prisma.SortOrder
   totalClaimedWSR?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -502,6 +520,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   email?: string
   username?: string
   walletAddress?: string
+  siteWalletAddress?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
@@ -525,6 +544,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   verificationExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   walletChain?: Prisma.StringNullableFilter<"User"> | string | null
   walletVerified?: Prisma.BoolFilter<"User"> | boolean
+  siteWalletKey?: Prisma.StringNullableFilter<"User"> | string | null
   unclaimedWSR?: Prisma.FloatFilter<"User"> | number
   totalClaimedWSR?: Prisma.FloatFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -543,7 +563,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   followers?: Prisma.FollowListRelationFilter
   following?: Prisma.FollowListRelationFilter
   sessions?: Prisma.SessionListRelationFilter
-}, "id" | "email" | "username" | "walletAddress">
+}, "id" | "email" | "username" | "walletAddress" | "siteWalletAddress">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -570,6 +590,8 @@ export type UserOrderByWithAggregationInput = {
   walletAddress?: Prisma.SortOrderInput | Prisma.SortOrder
   walletChain?: Prisma.SortOrderInput | Prisma.SortOrder
   walletVerified?: Prisma.SortOrder
+  siteWalletAddress?: Prisma.SortOrderInput | Prisma.SortOrder
+  siteWalletKey?: Prisma.SortOrderInput | Prisma.SortOrder
   unclaimedWSR?: Prisma.SortOrder
   totalClaimedWSR?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -609,6 +631,8 @@ export type UserScalarWhereWithAggregatesInput = {
   walletAddress?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   walletChain?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   walletVerified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  siteWalletAddress?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  siteWalletKey?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   unclaimedWSR?: Prisma.FloatWithAggregatesFilter<"User"> | number
   totalClaimedWSR?: Prisma.FloatWithAggregatesFilter<"User"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -640,6 +664,8 @@ export type UserCreateInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -685,6 +711,8 @@ export type UserUncheckedCreateInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -730,6 +758,8 @@ export type UserUpdateInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -775,6 +805,8 @@ export type UserUncheckedUpdateInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -820,6 +852,8 @@ export type UserCreateManyInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -851,6 +885,8 @@ export type UserUpdateManyMutationInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -882,6 +918,8 @@ export type UserUncheckedUpdateManyInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -913,6 +951,8 @@ export type UserCountOrderByAggregateInput = {
   walletAddress?: Prisma.SortOrder
   walletChain?: Prisma.SortOrder
   walletVerified?: Prisma.SortOrder
+  siteWalletAddress?: Prisma.SortOrder
+  siteWalletKey?: Prisma.SortOrder
   unclaimedWSR?: Prisma.SortOrder
   totalClaimedWSR?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -957,6 +997,8 @@ export type UserMaxOrderByAggregateInput = {
   walletAddress?: Prisma.SortOrder
   walletChain?: Prisma.SortOrder
   walletVerified?: Prisma.SortOrder
+  siteWalletAddress?: Prisma.SortOrder
+  siteWalletKey?: Prisma.SortOrder
   unclaimedWSR?: Prisma.SortOrder
   totalClaimedWSR?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -988,6 +1030,8 @@ export type UserMinOrderByAggregateInput = {
   walletAddress?: Prisma.SortOrder
   walletChain?: Prisma.SortOrder
   walletVerified?: Prisma.SortOrder
+  siteWalletAddress?: Prisma.SortOrder
+  siteWalletKey?: Prisma.SortOrder
   unclaimedWSR?: Prisma.SortOrder
   totalClaimedWSR?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -1269,6 +1313,8 @@ export type UserCreateWithoutSessionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1313,6 +1359,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1373,6 +1421,8 @@ export type UserUpdateWithoutSessionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1417,6 +1467,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1461,6 +1513,8 @@ export type UserCreateWithoutQuestionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1505,6 +1559,8 @@ export type UserUncheckedCreateWithoutQuestionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1565,6 +1621,8 @@ export type UserUpdateWithoutQuestionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1609,6 +1667,8 @@ export type UserUncheckedUpdateWithoutQuestionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1653,6 +1713,8 @@ export type UserCreateWithoutVotesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1697,6 +1759,8 @@ export type UserUncheckedCreateWithoutVotesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1757,6 +1821,8 @@ export type UserUpdateWithoutVotesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1801,6 +1867,8 @@ export type UserUncheckedUpdateWithoutVotesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1845,6 +1913,8 @@ export type UserCreateWithoutCommentsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1889,6 +1959,8 @@ export type UserUncheckedCreateWithoutCommentsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -1949,6 +2021,8 @@ export type UserUpdateWithoutCommentsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1993,6 +2067,8 @@ export type UserUncheckedUpdateWithoutCommentsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2037,6 +2113,8 @@ export type UserCreateWithoutCommentLikesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2081,6 +2159,8 @@ export type UserUncheckedCreateWithoutCommentLikesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2141,6 +2221,8 @@ export type UserUpdateWithoutCommentLikesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2185,6 +2267,8 @@ export type UserUncheckedUpdateWithoutCommentLikesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2229,6 +2313,8 @@ export type UserCreateWithoutPredictionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2273,6 +2359,8 @@ export type UserUncheckedCreateWithoutPredictionsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2333,6 +2421,8 @@ export type UserUpdateWithoutPredictionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2377,6 +2467,8 @@ export type UserUncheckedUpdateWithoutPredictionsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2421,6 +2513,8 @@ export type UserCreateWithoutPostsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2465,6 +2559,8 @@ export type UserUncheckedCreateWithoutPostsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2525,6 +2621,8 @@ export type UserUpdateWithoutPostsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2569,6 +2667,8 @@ export type UserUncheckedUpdateWithoutPostsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2613,6 +2713,8 @@ export type UserCreateWithoutPostLikesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2657,6 +2759,8 @@ export type UserUncheckedCreateWithoutPostLikesInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2717,6 +2821,8 @@ export type UserUpdateWithoutPostLikesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2761,6 +2867,8 @@ export type UserUncheckedUpdateWithoutPostLikesInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2805,6 +2913,8 @@ export type UserCreateWithoutFollowingInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2849,6 +2959,8 @@ export type UserUncheckedCreateWithoutFollowingInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2898,6 +3010,8 @@ export type UserCreateWithoutFollowersInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -2942,6 +3056,8 @@ export type UserUncheckedCreateWithoutFollowersInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3002,6 +3118,8 @@ export type UserUpdateWithoutFollowingInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3046,6 +3164,8 @@ export type UserUncheckedUpdateWithoutFollowingInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3101,6 +3221,8 @@ export type UserUpdateWithoutFollowersInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3145,6 +3267,8 @@ export type UserUncheckedUpdateWithoutFollowersInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3189,6 +3313,8 @@ export type UserCreateWithoutTokenTxsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3233,6 +3359,8 @@ export type UserUncheckedCreateWithoutTokenTxsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3293,6 +3421,8 @@ export type UserUpdateWithoutTokenTxsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3337,6 +3467,8 @@ export type UserUncheckedUpdateWithoutTokenTxsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3381,6 +3513,8 @@ export type UserCreateWithoutBookmarksInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3425,6 +3559,8 @@ export type UserUncheckedCreateWithoutBookmarksInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3485,6 +3621,8 @@ export type UserUpdateWithoutBookmarksInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3529,6 +3667,8 @@ export type UserUncheckedUpdateWithoutBookmarksInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3573,6 +3713,8 @@ export type UserCreateWithoutNotificationsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3617,6 +3759,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3677,6 +3821,8 @@ export type UserUpdateWithoutNotificationsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3721,6 +3867,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3765,6 +3913,8 @@ export type UserCreateWithoutAchievementsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3809,6 +3959,8 @@ export type UserUncheckedCreateWithoutAchievementsInput = {
   walletAddress?: string | null
   walletChain?: string | null
   walletVerified?: boolean
+  siteWalletAddress?: string | null
+  siteWalletKey?: string | null
   unclaimedWSR?: number
   totalClaimedWSR?: number
   createdAt?: Date | string
@@ -3869,6 +4021,8 @@ export type UserUpdateWithoutAchievementsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -3913,6 +4067,8 @@ export type UserUncheckedUpdateWithoutAchievementsInput = {
   walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletChain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   walletVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  siteWalletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  siteWalletKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   unclaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   totalClaimedWSR?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -4105,6 +4261,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   walletAddress?: boolean
   walletChain?: boolean
   walletVerified?: boolean
+  siteWalletAddress?: boolean
+  siteWalletKey?: boolean
   unclaimedWSR?: boolean
   totalClaimedWSR?: boolean
   createdAt?: boolean
@@ -4151,6 +4309,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   walletAddress?: boolean
   walletChain?: boolean
   walletVerified?: boolean
+  siteWalletAddress?: boolean
+  siteWalletKey?: boolean
   unclaimedWSR?: boolean
   totalClaimedWSR?: boolean
   createdAt?: boolean
@@ -4182,6 +4342,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   walletAddress?: boolean
   walletChain?: boolean
   walletVerified?: boolean
+  siteWalletAddress?: boolean
+  siteWalletKey?: boolean
   unclaimedWSR?: boolean
   totalClaimedWSR?: boolean
   createdAt?: boolean
@@ -4213,13 +4375,15 @@ export type UserSelectScalar = {
   walletAddress?: boolean
   walletChain?: boolean
   walletVerified?: boolean
+  siteWalletAddress?: boolean
+  siteWalletKey?: boolean
   unclaimedWSR?: boolean
   totalClaimedWSR?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "displayName" | "username" | "avatarUrl" | "bio" | "role" | "reputation" | "xp" | "level" | "badge" | "totalVotes" | "totalQuestions" | "totalPredictions" | "predictionAccuracy" | "streak" | "lastActiveAt" | "emailVerified" | "verificationCode" | "verificationExpiry" | "walletAddress" | "walletChain" | "walletVerified" | "unclaimedWSR" | "totalClaimedWSR" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "displayName" | "username" | "avatarUrl" | "bio" | "role" | "reputation" | "xp" | "level" | "badge" | "totalVotes" | "totalQuestions" | "totalPredictions" | "predictionAccuracy" | "streak" | "lastActiveAt" | "emailVerified" | "verificationCode" | "verificationExpiry" | "walletAddress" | "walletChain" | "walletVerified" | "siteWalletAddress" | "siteWalletKey" | "unclaimedWSR" | "totalClaimedWSR" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   questions?: boolean | Prisma.User$questionsArgs<ExtArgs>
   votes?: boolean | Prisma.User$votesArgs<ExtArgs>
@@ -4283,6 +4447,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     walletAddress: string | null
     walletChain: string | null
     walletVerified: boolean
+    siteWalletAddress: string | null
+    siteWalletKey: string | null
     unclaimedWSR: number
     totalClaimedWSR: number
     createdAt: Date
@@ -4748,6 +4914,8 @@ export interface UserFieldRefs {
   readonly walletAddress: Prisma.FieldRef<"User", 'String'>
   readonly walletChain: Prisma.FieldRef<"User", 'String'>
   readonly walletVerified: Prisma.FieldRef<"User", 'Boolean'>
+  readonly siteWalletAddress: Prisma.FieldRef<"User", 'String'>
+  readonly siteWalletKey: Prisma.FieldRef<"User", 'String'>
   readonly unclaimedWSR: Prisma.FieldRef<"User", 'Float'>
   readonly totalClaimedWSR: Prisma.FieldRef<"User", 'Float'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>

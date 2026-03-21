@@ -56,8 +56,19 @@ export default function WalletPage() {
   const [withdrawing, setWithdrawing] = useState(false);
   const [showOnchainDeposit, setShowOnchainDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [siteWallet, setSiteWallet] = useState<{ siteWalletAddress: string; siteWalletWSR: string } | null>(null);
 
   const POOL_WALLET = '0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119';
+
+  const fetchSiteWallet = useCallback(async () => {
+    try {
+      const res = await fetch('/api/wallet/site-wallet');
+      if (res.ok) {
+        const data = await res.json();
+        setSiteWallet(data);
+      }
+    } catch {}
+  }, []);
 
   const fetchClaimData = useCallback(async () => {
     try {
@@ -82,7 +93,8 @@ export default function WalletPage() {
 
   useEffect(() => {
     fetchClaimData();
-  }, [fetchClaimData]);
+    fetchSiteWallet();
+  }, [fetchClaimData, fetchSiteWallet]);
 
   useEffect(() => {
     if (address) fetchOnChainBalance(address);
@@ -142,9 +154,10 @@ export default function WalletPage() {
     setOnchainDepositing(true);
     setMessage(null);
     try {
-      // Step 1: Send WSR from connected MetaMask wallet to platform
+      // Step 1: Send WSR from connected MetaMask wallet to user's site wallet
+      const depositTo = siteWallet?.siteWalletAddress || POOL_WALLET;
       setMessage({ type: 'success', text: 'Confirm the transaction in MetaMask...' });
-      const txHash = await sendWSR(POOL_WALLET, onchainDepositAmount);
+      const txHash = await sendWSR(depositTo, onchainDepositAmount);
 
       // Step 2: Wait for backend to verify on-chain and credit account (retry up to 6 times)
       setMessage({ type: 'success', text: 'Transaction sent! Verifying on chain...' });
@@ -248,23 +261,45 @@ export default function WalletPage() {
             </Button>
           </div>
 
-          {/* Your Wallet Address */}
+          {/* Site WSR Wallet Address */}
+          {siteWallet?.siteWalletAddress && (
+            <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-3 mt-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Coins size={14} className="text-purple-400 shrink-0" />
+                <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your Site WSR Wallet</p>
+                <span className="text-[10px] text-muted-foreground ml-auto">{parseFloat(siteWallet.siteWalletWSR || '0').toLocaleString()} WSR on-chain</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-mono text-purple-300 break-all select-all flex-1">{siteWallet.siteWalletAddress}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(siteWallet.siteWalletAddress);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="shrink-0 px-2 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer text-purple-300"
+                >
+                  {copied ? <><CheckCircle2 size={10} /> Copied</> : <><Copy size={10} /> Copy</>}
+                </button>
+                <a
+                  href={`https://amoy.polygonscan.com/address/${siteWallet.siteWalletAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 px-2 py-1 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer text-purple-300 no-underline"
+                >
+                  <ExternalLink size={10} /> Explorer
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* MetaMask Wallet */}
           {(address || claimData?.walletAddress) && (
-            <div className="bg-card/30 rounded-xl p-3 mt-3 flex items-center gap-2">
-              <Shield size={14} className="text-emerald-400 shrink-0" />
-              <p className="text-[10px] text-muted-foreground shrink-0">WSR Wallet:</p>
-              <p className="text-xs font-mono text-emerald-400 break-all select-all flex-1">{address || claimData?.walletAddress}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(address || claimData?.walletAddress || '');
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                className="shrink-0 px-2 py-1 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
-              >
-                {copied ? <><CheckCircle2 size={10} className="text-emerald-400" /> Copied</> : <><Copy size={10} /> Copy</>}
-              </button>
+            <div className="bg-card/30 rounded-xl p-3 mt-2 flex items-center gap-2">
+              <Wallet size={14} className="text-amber-400 shrink-0" />
+              <p className="text-[10px] text-muted-foreground shrink-0">MetaMask:</p>
+              <p className="text-xs font-mono text-amber-400 break-all select-all flex-1">{address || claimData?.walletAddress}</p>
             </div>
           )}
 
@@ -730,14 +765,18 @@ export default function WalletPage() {
 
                     <div className="bg-secondary/20 rounded-lg p-3 mb-3 text-xs space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Your Wallet</span>
-                        <span className="font-mono text-[10px]">{address?.slice(0, 8)}...{address?.slice(-6)}</span>
+                        <span className="text-muted-foreground">From (MetaMask)</span>
+                        <span className="font-mono text-[10px] text-amber-400">{address?.slice(0, 8)}...{address?.slice(-6)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">MetaMask WSR Balance</span>
+                        <span className="text-muted-foreground">MetaMask WSR</span>
                         <span className="font-bold font-mono text-emerald-400">
                           {(() => { const w = wsrBalance || onChainBalance?.wsr; return w ? parseFloat(w).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'; })()} WSR
                         </span>
+                      </div>
+                      <div className="flex justify-between border-t border-border/10 pt-1">
+                        <span className="text-muted-foreground">To (Site Wallet)</span>
+                        <span className="font-mono text-[10px] text-purple-400">{(siteWallet?.siteWalletAddress || POOL_WALLET).slice(0, 8)}...{(siteWallet?.siteWalletAddress || POOL_WALLET).slice(-6)}</span>
                       </div>
                     </div>
 

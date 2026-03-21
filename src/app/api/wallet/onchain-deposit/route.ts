@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: currentUser.id },
-      select: { id: true, walletAddress: true, unclaimedWSR: true },
+      select: { id: true, walletAddress: true, siteWalletAddress: true, unclaimedWSR: true },
     });
 
     if (!user) {
@@ -74,13 +74,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Find the ERC-20 Transfer event in the logs
+    // Accept transfers TO pool wallet OR TO user's site wallet
+    const userSiteWallet = user.siteWalletAddress?.toLowerCase();
     const transferLog = receipt.logs.find(log => {
       if (log.address.toLowerCase() !== WSR_CONTRACT.toLowerCase()) return false;
       if (log.topics[0] !== TRANSFER_EVENT_TOPIC) return false;
-      // topics[1] = from (padded address), topics[2] = to (padded address)
       const from = '0x' + log.topics[1].slice(26).toLowerCase();
       const to = '0x' + log.topics[2].slice(26).toLowerCase();
-      return from === user.walletAddress!.toLowerCase() && to === POOL_WALLET.toLowerCase();
+      const fromMatch = from === user.walletAddress!.toLowerCase();
+      const toMatch = to === POOL_WALLET.toLowerCase() || (userSiteWallet && to === userSiteWallet);
+      return fromMatch && toMatch;
     });
 
     if (!transferLog) {

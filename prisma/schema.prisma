@@ -38,14 +38,18 @@ model User {
   verificationCode  String?
   verificationExpiry DateTime?
 
-  // Wallet
+  // MetaMask wallet (external)
   walletAddress  String? @unique
   walletChain    String? @default("polygon")
   walletVerified Boolean @default(false)
 
+  // Site-generated WSR wallet (per-user, managed by platform)
+  siteWalletAddress String? @unique
+  siteWalletKey     String?  // Encrypted private key
+
   // Token economy
-  unclaimedWSR    Float @default(0)  // XP converted to WSR, pending on-chain claim
-  totalClaimedWSR Float @default(0)  // Total WSR successfully sent on-chain
+  unclaimedWSR    Float @default(0)  // WSR balance on site (internal ledger)
+  totalClaimedWSR Float @default(0)  // Total WSR withdrawn to MetaMask
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
