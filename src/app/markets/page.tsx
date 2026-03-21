@@ -248,13 +248,15 @@ function OrderSlip({ market, side, onClose, onConfirm }: {
   market: QuickMarket;
   side: 'up' | 'down';
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (amount: number) => void;
 }) {
   const [betAmount, setBetAmount] = useState(1);
   const isUp = side === 'up';
   const cents = isUp ? market.upCents : market.downCents;
-  const potentialReturn = betAmount * parseFloat(isUp ? market.upReturn : market.downReturn);
-  const profit = potentialReturn - betAmount;
+  const displayAmount = betAmount === -1 ? 'MAX' : betAmount;
+  const calcAmount = betAmount === -1 ? 10000 : betAmount;
+  const potentialReturn = calcAmount * parseFloat(isUp ? market.upReturn : market.downReturn);
+  const profit = potentialReturn - calcAmount;
 
   return (
     <motion.div
@@ -298,28 +300,39 @@ function OrderSlip({ market, side, onClose, onConfirm }: {
           <DollarSign size={14} className="text-muted-foreground" />
           <input
             type="number"
-            value={betAmount}
+            value={betAmount === -1 ? '' : betAmount}
+            placeholder="MAX"
             onChange={e => setBetAmount(Math.max(1, parseInt(e.target.value) || 1))}
             min={1}
-            max={10}
+            max={10000}
             className="flex-1 bg-transparent text-sm font-bold outline-none"
           />
           <span className="text-[10px] text-muted-foreground">XP</span>
         </div>
-        <div className="flex gap-1.5 mt-2">
-          {[1, 2, 5, 10].map(amt => (
+        <div className="flex gap-1.5 mt-2 flex-wrap">
+          {[1, 5, 10, 20, 50, 100].map(amt => (
             <button
               key={amt}
               onClick={() => setBetAmount(amt)}
-              className={`flex-1 py-1 rounded text-[11px] font-medium border transition-all ${
+              className={`flex-1 min-w-[40px] py-1 rounded text-[11px] font-medium border transition-all ${
                 betAmount === amt
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                   : 'bg-secondary/20 border-border/30 text-muted-foreground hover:bg-secondary/40'
               }`}
             >
-              {amt} XP
+              {amt}
             </button>
           ))}
+          <button
+            onClick={() => setBetAmount(-1)}
+            className={`flex-1 min-w-[40px] py-1 rounded text-[11px] font-medium border transition-all ${
+              betAmount === -1
+                ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+                : 'bg-secondary/20 border-border/30 text-muted-foreground hover:bg-secondary/40'
+            }`}
+          >
+            MAX
+          </button>
         </div>
       </div>
 
@@ -347,14 +360,14 @@ function OrderSlip({ market, side, onClose, onConfirm }: {
 
       {/* Confirm button */}
       <button
-        onClick={onConfirm}
+        onClick={() => onConfirm(betAmount === -1 ? 10000 : betAmount)}
         className={`w-full py-3 rounded-lg text-sm font-bold transition-all ${
           isUp
             ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
             : 'bg-red-500 hover:bg-red-600 text-white'
         }`}
       >
-        {isUp ? '📈' : '📉'} Bet {betAmount} XP on {side.toUpperCase()}
+        {isUp ? '📈' : '📉'} Bet {displayAmount} XP on {side.toUpperCase()}
       </button>
 
       <p className="text-[9px] text-muted-foreground text-center mt-2">
@@ -391,13 +404,13 @@ export default function QuickMarketsPage() {
     return () => clearInterval(interval);
   }, [fetchMarkets]);
 
-  const handleBet = async (asset: string, duration: number, side: 'up' | 'down') => {
+  const handleBet = async (asset: string, duration: number, side: 'up' | 'down', amount: number = 1) => {
     setError('');
     try {
       const res = await fetch('/api/markets/quick', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ asset, duration, side }),
+        body: JSON.stringify({ asset, duration, side, amount }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -525,7 +538,7 @@ export default function QuickMarketsPage() {
                 market={orderSlip.market}
                 side={orderSlip.side}
                 onClose={() => setOrderSlip(null)}
-                onConfirm={() => handleBet(orderSlip.market.asset, orderSlip.market.duration, orderSlip.side)}
+                onConfirm={(amount) => handleBet(orderSlip.market.asset, orderSlip.market.duration, orderSlip.side, amount)}
               />
             </div>
           )}
