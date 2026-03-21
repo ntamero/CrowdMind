@@ -7,7 +7,6 @@ import {
   ArrowUp, ArrowDown, Minus, Sparkles, Clock, Users, Target,
   Lightbulb, ChevronRight, ThumbsUp, Send,
 } from 'lucide-react';
-import { mockQuestions, mockComments } from '@/lib/mock-data';
 import { cn, formatNumber, timeAgo } from '@/lib/utils';
 import { useAuth } from '@/lib/supabase/auth-context';
 import ShareModal from '@/components/shared/ShareModal';
@@ -58,12 +57,8 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
             return;
           }
         }
-      } catch {}
-      // Fallback to mock
-      const q = mockQuestions.find((q) => q.id === id);
-      if (q) {
-        setQuestion(q);
-        setComments(mockComments.filter((c) => c.questionId === id));
+      } catch {
+        // API failed
       }
     }
     fetchQuestion();
@@ -135,19 +130,25 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
     setTimeout(() => setShowAI(true), 800);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    const comment: Comment = {
-      id: 'c' + Date.now(),
-      userId: 'u1',
-      user: mockQuestions[0].user,
-      questionId: id,
-      text: newComment,
-      likes: 0,
-      createdAt: new Date().toISOString(),
-    };
-    setComments([comment, ...comments]);
-    setNewComment('');
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: id, text: newComment }),
+      });
+      if (res.ok) {
+        const comment = await res.json();
+        setComments([comment, ...comments]);
+        setNewComment('');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to post comment');
+      }
+    } catch {
+      alert('Network error');
+    }
   };
 
   const analysis = question.aiAnalysis;
