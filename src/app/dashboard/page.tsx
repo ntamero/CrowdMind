@@ -180,20 +180,14 @@ export default function DashboardPage() {
               {/* Quick Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { icon: DollarSign, label: 'Total Earned', value: `$${earningsData.allTime.toLocaleString()}`, color: 'text-emerald-400', bg: 'bg-emerald-500/10', change: '+12.5%', positive: true },
-                  { icon: Wallet, label: 'Balance', value: `$${walletData.balance.toLocaleString()}`, color: 'text-indigo-400', bg: 'bg-indigo-500/10', change: '+$89.25', positive: true },
-                  { icon: MessageSquare, label: 'My Questions', value: userQuestions.length.toString(), color: 'text-amber-400', bg: 'bg-amber-500/10', change: '+2 this week', positive: true },
-                  { icon: Target, label: 'Accuracy', value: `${user.predictionAccuracy}%`, color: 'text-cyan-400', bg: 'bg-cyan-500/10', change: '+1.2%', positive: true },
+                  { icon: Zap, label: 'Total XP', value: `${(user.xp || 0).toLocaleString()} XP`, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { icon: Wallet, label: 'WSR Tokens', value: `${walletData.balance} WSR`, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { icon: MessageSquare, label: 'My Questions', value: userQuestions.length.toString(), color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                  { icon: Star, label: 'Level', value: `Lv.${user.level || 1}`, color: 'text-purple-400', bg: 'bg-purple-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', s.bg)}>
-                        <s.icon size={16} className={s.color} />
-                      </div>
-                      <span className={cn('text-[10px] font-bold flex items-center gap-0.5', s.positive ? 'text-emerald-400' : 'text-red-400')}>
-                        {s.positive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-                        {s.change}
-                      </span>
+                    <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center mb-3', s.bg)}>
+                      <s.icon size={16} className={s.color} />
                     </div>
                     <div className="text-xl font-black">{s.value}</div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{s.label}</div>
@@ -244,10 +238,10 @@ export default function DashboardPage() {
                   </h3>
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     {[
-                      { label: 'Today', value: `$${earningsData.today}` },
-                      { label: 'This Week', value: `$${earningsData.thisWeek}` },
-                      { label: 'This Month', value: `$${earningsData.thisMonth}` },
-                      { label: 'All Time', value: `$${earningsData.allTime.toLocaleString()}` },
+                      { label: 'Today', value: `${earningsData.today} XP` },
+                      { label: 'This Week', value: `${earningsData.thisWeek} XP` },
+                      { label: 'This Month', value: `${earningsData.thisMonth} XP` },
+                      { label: 'All Time', value: `${earningsData.allTime.toLocaleString()} XP` },
                     ].map((e) => (
                       <div key={e.label} className="bg-secondary/20 rounded-lg p-3 text-center">
                         <div className="text-lg font-black text-emerald-400">{e.value}</div>
@@ -261,7 +255,7 @@ export default function DashboardPage() {
                       <div key={b.label} className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full shrink-0" style={{ background: b.color }} />
                         <span className="text-[12px] flex-1">{b.label}</span>
-                        <span className="text-[12px] font-bold">${b.value.toLocaleString()}</span>
+                        <span className="text-[12px] font-bold">{b.value.toLocaleString()} XP</span>
                         <div className="w-20 h-1.5 bg-secondary/40 rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${b.percent}%`, background: b.color }} />
                         </div>
@@ -291,7 +285,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <p className={cn('text-[13px] font-bold', tx.amount > 0 ? 'text-emerald-400' : 'text-red-400')}>
-                          {tx.amount > 0 ? '+' : ''}{tx.amount < 0 ? '-' : ''}${Math.abs(tx.amount).toFixed(2)}
+                          {tx.amount > 0 ? '+' : ''}{tx.amount} XP
                         </p>
                         <Badge className={cn('text-[8px] border-0', tx.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400')}>
                           {tx.status}
@@ -334,7 +328,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-3">
                         <span className="flex items-center gap-0.5"><Users size={9} /> {formatNumber(q.totalVotes)}</span>
                         <span className="flex items-center gap-0.5"><MessageSquare size={9} /> {q.totalComments}</span>
-                        <span className="flex items-center gap-0.5"><DollarSign size={9} className="text-emerald-400" /> $12.50</span>
+                        <span className="flex items-center gap-0.5"><Zap size={9} className="text-amber-400" /> +3 XP</span>
                       </div>
                       {/* Options preview */}
                       <div className="space-y-1 mb-3">
@@ -494,10 +488,10 @@ export default function DashboardPage() {
               {/* Earnings Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Today', value: `$${earningsData.today}`, icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'This Week', value: `$${earningsData.thisWeek}`, icon: TrendingUp, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'This Month', value: `$${earningsData.thisMonth}`, icon: BarChart3, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'All Time', value: `$${earningsData.allTime.toLocaleString()}`, icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Today', value: `${earningsData.today} XP`, icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'This Week', value: `${earningsData.thisWeek} XP`, icon: TrendingUp, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                  { label: 'This Month', value: `${earningsData.thisMonth} XP`, icon: BarChart3, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                  { label: 'All Time', value: `${earningsData.allTime.toLocaleString()} XP`, icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}>
@@ -523,7 +517,7 @@ export default function DashboardPage() {
                             <span className="w-2.5 h-2.5 rounded-full" style={{ background: b.color }} />
                             {b.label}
                           </span>
-                          <span className="text-[13px] font-bold">${b.value.toLocaleString()}</span>
+                          <span className="text-[13px] font-bold">{b.value.toLocaleString()} XP</span>
                         </div>
                         <div className="h-2 bg-secondary/40 rounded-full overflow-hidden">
                           <motion.div
@@ -560,7 +554,7 @@ export default function DashboardPage() {
                               className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                             />
                           </div>
-                          <span className="text-[12px] font-bold text-emerald-400 w-14 text-right">${day.amount}</span>
+                          <span className="text-[12px] font-bold text-emerald-400 w-14 text-right">{day.amount} XP</span>
                         </div>
                       );
                     })}
@@ -583,7 +577,7 @@ export default function DashboardPage() {
                         <p className="text-[10px] text-muted-foreground">{formatNumber(q.totalVotes)} votes</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[13px] font-bold text-emerald-400">${(q.totalVotes * 0.001).toFixed(2)}</p>
+                        <p className="text-[13px] font-bold text-emerald-400">{q.totalVotes} XP</p>
                         <p className="text-[9px] text-muted-foreground">earned</p>
                       </div>
                     </div>
@@ -620,9 +614,9 @@ export default function DashboardPage() {
 
                 <div className="mb-5">
                   <p className="text-[11px] text-muted-foreground mb-1">Available Balance</p>
-                  <p className="text-4xl font-black text-white">${walletData.balance.toLocaleString()}</p>
-                  <p className="text-[12px] text-amber-400 mt-1 flex items-center gap-1">
-                    <Clock size={11} /> Pending: ${0}
+                  <p className="text-4xl font-black text-white">{walletData.balance.toLocaleString()} XP</p>
+                  <p className="text-[12px] text-muted-foreground mt-1">
+                    1 WSR = $0.001
                   </p>
                 </div>
 
@@ -639,9 +633,9 @@ export default function DashboardPage() {
               {/* Wallet Stats */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Total Earned', value: `$${walletData.totalEarned.toLocaleString()}`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Total Withdrawn', value: `$${0}`, icon: ArrowDownRight, color: 'text-red-400', bg: 'bg-red-500/10' },
-                  { label: 'Pending', value: `$${0}`, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Total Earned', value: `${walletData.totalEarned.toLocaleString()} XP`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Withdrawn WSR', value: `0 WSR`, icon: ArrowDownRight, color: 'text-red-400', bg: 'bg-red-500/10' },
+                  { label: 'Pending', value: `0 XP`, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}>
@@ -676,7 +670,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <p className={cn('text-[14px] font-bold', tx.amount > 0 ? 'text-emerald-400' : 'text-red-400')}>
-                          {tx.amount > 0 ? '+' : ''}{tx.amount < 0 ? '-' : ''}${Math.abs(tx.amount).toFixed(2)}
+                          {tx.amount > 0 ? '+' : ''}{tx.amount < 0 ? '-' : ''}{Math.abs(tx.amount).toFixed(0)} XP
                         </p>
                         <div className="flex items-center gap-1 justify-end">
                           {tx.status === 'completed'
