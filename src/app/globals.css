@@ -47,11 +47,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ─── CrowdMind Dark Theme (always dark) ───── */
+/* ─── CrowdMind Theme ───── */
 :root {
   --radius: 0.625rem;
 
-  /* Shadcn tokens — dark by default */
+  /* Dark by default */
   --background: #0a0a14;
   --foreground: #e8e8f0;
   --card: #12121e;
@@ -84,6 +84,43 @@
   --sidebar-accent: #1a1a2e;
   --sidebar-accent-foreground: #e8e8f0;
   --sidebar-border: #1e1e35;
+  --sidebar-ring: #6366f1;
+}
+
+/* ─── Light Theme ───── */
+.light {
+  --background: #f8f9fc;
+  --foreground: #1a1a2e;
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f8;
+  --secondary-foreground: #1a1a2e;
+  --muted: #f0f0f8;
+  --muted-foreground: #6b7094;
+  --accent: #e8e8f4;
+  --accent-foreground: #1a1a2e;
+  --destructive: #ef4444;
+  --border: #e2e2ee;
+  --input: #e8e8f4;
+  --ring: #6366f1;
+
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f0f8;
+  --sidebar-accent-foreground: #1a1a2e;
+  --sidebar-border: #e2e2ee;
   --sidebar-ring: #6366f1;
 }
 
