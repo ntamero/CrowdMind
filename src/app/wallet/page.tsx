@@ -57,6 +57,7 @@ export default function WalletPage() {
   const [showOnchainDeposit, setShowOnchainDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [siteWallet, setSiteWallet] = useState<{ siteWalletAddress: string; siteWalletWSR: string } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const POOL_WALLET = '0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119';
 
@@ -69,6 +70,31 @@ export default function WalletPage() {
       }
     } catch {}
   }, []);
+
+  // Import on-chain WSR from site wallet into account balance
+  const handleImportBalance = async () => {
+    if (importing) return;
+    setImporting(true);
+    setMessage(null);
+    try {
+      setMessage({ type: 'success', text: 'Importing WSR balance...' });
+      const res = await fetch('/api/wallet/site-wallet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message });
+        fetchClaimData();
+        fetchSiteWallet();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Import failed' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Import failed' });
+    }
+    setImporting(false);
+  };
 
   const fetchClaimData = useCallback(async () => {
     try {
@@ -266,8 +292,8 @@ export default function WalletPage() {
             <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl p-3 mt-3">
               <div className="flex items-center gap-2 mb-1.5">
                 <Coins size={14} className="text-purple-400 shrink-0" />
-                <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your Site WSR Wallet</p>
-                <span className="text-[10px] text-muted-foreground ml-auto">{parseFloat(siteWallet.siteWalletWSR || '0').toLocaleString()} WSR on-chain</span>
+                <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Your WSR Wallet</p>
+                <span className="text-[10px] font-bold font-mono text-purple-300 ml-auto">{parseFloat(siteWallet.siteWalletWSR || '0').toLocaleString()} WSR on-chain</span>
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-xs font-mono text-purple-300 break-all select-all flex-1">{siteWallet.siteWalletAddress}</p>
@@ -291,6 +317,17 @@ export default function WalletPage() {
                   <ExternalLink size={10} /> Explorer
                 </a>
               </div>
+              {/* Import balance button */}
+              {parseFloat(siteWallet.siteWalletWSR || '0') > 0 && (
+                <button
+                  type="button"
+                  onClick={handleImportBalance}
+                  disabled={importing}
+                  className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 border-0"
+                >
+                  {importing ? <><RefreshCw size={12} className="animate-spin" /> Importing...</> : <><ArrowDownLeft size={12} /> Import {parseFloat(siteWallet.siteWalletWSR).toLocaleString()} WSR to Account</>}
+                </button>
+              )}
             </div>
           )}
 
@@ -426,16 +463,25 @@ export default function WalletPage() {
                     </div>
 
                     <div className="mb-4">
-                      <p className="text-xs text-muted-foreground mb-2">Amount to convert:</p>
+                      <p className="text-xs text-muted-foreground mb-2">Amount (WSR):</p>
+                      <input
+                        type="number"
+                        min={1}
+                        max={claimableWSR}
+                        value={convertAmount}
+                        onChange={(e) => setConvertAmount(Math.max(1, Math.min(claimableWSR, parseInt(e.target.value) || 1)))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-secondary/20 border border-amber-500/20 text-sm font-mono font-bold text-foreground focus:outline-none focus:border-amber-500/50 mb-2"
+                        placeholder="Enter WSR amount"
+                      />
                       <div className="flex items-center gap-2 flex-wrap">
-                        {[1, 5, 10, 25].filter(a => a <= claimableWSR).map(amt => (
-                          <button key={amt} onClick={() => setConvertAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', convertAmount === amt ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
-                            {amt} WSR
+                        {[1, 5, 10, 25, 100].filter(a => a <= claimableWSR).map(amt => (
+                          <button key={amt} onClick={() => setConvertAmount(amt)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border', convertAmount === amt ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            {amt}
                           </button>
                         ))}
                         {claimableWSR >= 1 && (
-                          <button onClick={() => setConvertAmount(claimableWSR)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', convertAmount === claimableWSR ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
-                            MAX ({claimableWSR} WSR)
+                          <button onClick={() => setConvertAmount(claimableWSR)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border', convertAmount === claimableWSR ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            MAX ({claimableWSR})
                           </button>
                         )}
                       </div>
@@ -507,15 +553,24 @@ export default function WalletPage() {
                     {unclaimedWSR >= 1 ? (
                       <>
                         <div className="mb-4">
-                          <p className="text-xs text-muted-foreground mb-2">Amount to convert:</p>
+                          <p className="text-xs text-muted-foreground mb-2">Amount (WSR):</p>
+                          <input
+                            type="number"
+                            min={1}
+                            max={Math.floor(unclaimedWSR)}
+                            value={depositAmount}
+                            onChange={(e) => setDepositAmount(Math.max(1, Math.min(Math.floor(unclaimedWSR), parseInt(e.target.value) || 1)))}
+                            className="w-full px-4 py-2.5 rounded-xl bg-secondary/20 border border-blue-500/20 text-sm font-mono font-bold text-foreground focus:outline-none focus:border-blue-500/50 mb-2"
+                            placeholder="Enter WSR amount"
+                          />
                           <div className="flex items-center gap-2 flex-wrap">
-                            {[1, 5, 10, 25].filter(a => a <= Math.floor(unclaimedWSR)).map(amt => (
-                              <button key={amt} onClick={() => setDepositAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', depositAmount === amt ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
-                                {amt} WSR
+                            {[1, 10, 100, 1000, 5000].filter(a => a <= Math.floor(unclaimedWSR)).map(amt => (
+                              <button key={amt} onClick={() => setDepositAmount(amt)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border', depositAmount === amt ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                                {amt.toLocaleString()}
                               </button>
                             ))}
-                            <button onClick={() => setDepositAmount(Math.floor(unclaimedWSR))} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', depositAmount === Math.floor(unclaimedWSR) ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
-                              MAX ({Math.floor(unclaimedWSR)} WSR)
+                            <button onClick={() => setDepositAmount(Math.floor(unclaimedWSR))} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border', depositAmount === Math.floor(unclaimedWSR) ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                              MAX ({Math.floor(unclaimedWSR).toLocaleString()})
                             </button>
                           </div>
                         </div>
