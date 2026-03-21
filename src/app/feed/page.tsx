@@ -144,7 +144,7 @@ export default function FeedPage() {
             ) : (
               <AnimatePresence>
                 {filteredQuestions.map((q: any, i: number) => {
-                  const totalVotes = q.options?.reduce((sum: number, o: any) => sum + (o.voteCount || 0), 0) || q.totalVotes || 0;
+                  const totalVotes = q.options?.reduce((sum: number, o: any) => sum + (o.voteCount || o.votes || 0), 0) || q.totalVotes || 0;
                   return (
                     <motion.div
                       key={q.id}
@@ -215,7 +215,8 @@ export default function FeedPage() {
                       {q.options && q.options.length > 0 && (
                         <div className="px-4 pb-3 space-y-2">
                           {q.options.map((opt: any, idx: number) => {
-                            const pct = totalVotes > 0 ? Math.round((opt.voteCount / totalVotes) * 100) : 0;
+                            const votes = opt.voteCount || opt.votes || 0;
+                            const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
                             return (
                               <Link
                                 key={opt.id || idx}
@@ -227,7 +228,7 @@ export default function FeedPage() {
                                   style={{ width: `${pct}%` }}
                                 />
                                 <div className="relative flex items-center justify-between w-full px-4">
-                                  <span className="text-[13px] font-medium">{opt.label}</span>
+                                  <span className="text-[13px] font-medium">{opt.label || opt.text}</span>
                                   <span className="text-[12px] font-bold text-amber-400">{pct}%</span>
                                 </div>
                               </Link>
