@@ -90,11 +90,13 @@ npx next build && pm2 restart wisery
 | WSR Token | ERC-20 on Polygon Amoy, 1B supply |
 | XP → WSR Conversion | 250 XP = 1 WSR, 10 XP fee, 1hr cooldown |
 | WSR → XP Conversion | 1 WSR = 240 XP (250 - 10 fee) |
-| On-chain WSR Deposit | MetaMask → Site: send WSR to pool wallet, backend verifies tx, credits unclaimedWSR |
-| On-chain WSR Withdrawal | Site → MetaMask: backend sends WSR from deployer wallet to user's wallet on Polygon Amoy |
-| Pool Wallet | Fee collection (0.04 WSR per conversion), admin visible |
+| Per-User Site Wallet | Auto-generated WSR wallet per user, encrypted private key storage |
+| Auto-Import WSR | On-chain WSR sent to site wallet is auto-credited to unclaimedWSR on page load |
+| On-chain WSR Deposit | MetaMask → Site wallet: send WSR, auto-credited (no import button needed) |
+| On-chain WSR Withdrawal | Site → MetaMask: backend sends WSR from deployer wallet to user's wallet |
+| Pool Wallet | Fee collection (0.04 WSR per conversion), admin visible + withdrawable |
 | Admin Panel (Real Data) | Overview, Users, Questions, Categories, Earnings, Wallets, Transactions, Timers |
-| Dashboard | Overview stats, my questions, create question, earnings, wallet tab |
+| Dashboard | Overview (XP/WSR/questions/level), earnings breakdown, wallet summary, transactions |
 | Question System | Create, vote, options, categories, expiry, images |
 | Leaderboard | Top users by reputation/XP |
 | Predictions | Prediction markets with participation |
@@ -114,12 +116,14 @@ src/app/wallet/page.tsx          — XP↔WSR conversion UI (two-way)
 src/app/dashboard/page.tsx       — User dashboard (XP/WSR units)
 src/app/admin/page.tsx           — Admin panel (real DB data)
 src/app/earn/page.tsx            — Earning methods & daily tasks
+src/app/api/wallet/site-wallet/route.ts     — Per-user site wallet (auto-generate + auto-import WSR)
 src/app/api/wallet/claim/route.ts           — XP → WSR conversion API
 src/app/api/wallet/deposit/route.ts         — WSR → XP conversion API (internal)
 src/app/api/wallet/onchain-deposit/route.ts — MetaMask → Site WSR deposit (verifies on-chain tx)
 src/app/api/wallet/withdraw/route.ts        — Site → MetaMask WSR withdrawal (sends on-chain)
 src/app/api/wallet/balance/route.ts         — On-chain balance check
 src/app/api/wallet/connect/route.ts         — MetaMask SIWE connection
+src/app/api/dashboard/route.ts      — Dashboard data (user, questions, stats, transactions)
 src/app/api/admin/stats/route.ts    — Admin dashboard data
 src/app/api/admin/pool/route.ts     — Pool wallet data
 src/context/WalletContext.tsx    — MetaMask state provider
