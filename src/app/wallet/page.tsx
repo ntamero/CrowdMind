@@ -46,6 +46,7 @@ export default function WalletPage() {
   const [showConvert, setShowConvert] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [onChainBalance, setOnChainBalance] = useState<{ wsr: string; pol: string } | null>(null);
 
   const fetchClaimData = useCallback(async () => {
     try {
@@ -58,9 +59,23 @@ export default function WalletPage() {
     setLoading(false);
   }, []);
 
+  const fetchOnChainBalance = useCallback(async (addr: string) => {
+    try {
+      const res = await fetch(`/api/wallet/balance?address=${addr}`);
+      if (res.ok) {
+        const data = await res.json();
+        setOnChainBalance({ wsr: data.wsrBalance, pol: data.polBalance });
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     fetchClaimData();
   }, [fetchClaimData]);
+
+  useEffect(() => {
+    if (address) fetchOnChainBalance(address);
+  }, [address, fetchOnChainBalance]);
 
   const handleConvert = async () => {
     if (converting || !claimData) return;
@@ -376,13 +391,19 @@ export default function WalletPage() {
               <div className="bg-secondary/20 rounded-xl p-3">
                 <p className="text-[10px] text-muted-foreground mb-0.5">WSR Token Balance</p>
                 <p className="text-lg font-bold font-mono text-amber-400">
-                  {wsrBalance ? parseFloat(wsrBalance).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'} <span className="text-xs">WSR</span>
+                  {(() => {
+                    const wsr = wsrBalance || onChainBalance?.wsr;
+                    return wsr ? parseFloat(wsr).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0';
+                  })()} <span className="text-xs">WSR</span>
                 </p>
               </div>
               <div className="bg-secondary/20 rounded-xl p-3">
                 <p className="text-[10px] text-muted-foreground mb-0.5">Native Balance (Gas)</p>
                 <p className="text-lg font-bold font-mono text-purple-400">
-                  {balance ? parseFloat(balance).toFixed(4) : '0'} <span className="text-xs">POL</span>
+                  {(() => {
+                    const pol = balance || onChainBalance?.pol;
+                    return pol ? parseFloat(pol).toFixed(4) : '0';
+                  })()} <span className="text-xs">POL</span>
                 </p>
               </div>
             </div>
@@ -391,7 +412,7 @@ export default function WalletPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => refreshWsrBalance()}
+                onClick={() => { refreshWsrBalance(); if (address) fetchOnChainBalance(address); }}
                 className="px-3 py-1.5 rounded-lg bg-secondary/30 hover:bg-secondary/50 text-[11px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <RefreshCw size={11} /> Refresh Balances

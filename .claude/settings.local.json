@@ -17,7 +17,13 @@
       "Bash(ssh root@37.27.247.119 \"mkdir -p /var/www/crowdmind/src/app/markets/\\\\[id\\\\] /var/www/crowdmind/src/app/api/chat\")",
       "Bash(ssh root@37.27.247.119 \"mkdir -p /var/www/wisery/src/app/markets/\\\\[id\\\\] /var/www/wisery/src/app/api/chat /var/www/wisery/src/app/api/markets/quick\")",
       "WebFetch(domain:polymarket.com)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(ssh root@wisery.live \"cd /var/www/crowdmind && git pull origin master && npm install && npm run build && pm2 restart crowdmind\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@wisery.live \"ls /var/www/ && pm2 list 2>/dev/null | head -10\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@wisery.live \"pm2 show wisery 2>/dev/null | grep ''exec cwd\\\\|script path''\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@wisery.live \"cd /var/www/wisery && ls -la .git 2>/dev/null && git remote -v 2>/dev/null && git log --oneline -3 2>/dev/null\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@wisery.live \"ls /var/www/wisery/ | head -20\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@wisery.live \"cd /var/www && mv wisery wisery-old && git clone https://github.com/ntamero/CrowdMind.git wisery 2>&1\")"
     ]
   }
 }

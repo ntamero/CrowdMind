@@ -82,8 +82,11 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       try {
         const contract = new Contract(WSR_CONTRACT, WSR_ABI, provider);
         const wsrBal = await contract.balanceOf(address);
+        console.log('[WSR] Balance fetched:', formatUnits(wsrBal, 18));
         setState(prev => ({ ...prev, wsrBalance: formatUnits(wsrBal, 18) }));
-      } catch {}
+      } catch (err) {
+        console.error('[WSR] Balance fetch error:', err);
+      }
     }
   }, []);
 
