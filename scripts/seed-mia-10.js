@@ -1,8 +1,8 @@
-// Seed 10 fresh MIA questions with Pexels images
-const { PrismaClient } = require('../src/generated/prisma/client');
-const prisma = new PrismaClient();
+// Seed 10 fresh MIA questions with Pexels images (using pg directly)
+const { Client } = require('pg');
+const { randomUUID } = require('crypto');
 
-const PEXELS_KEY = process.env.PEXELS_API_KEY || '';
+const PEXELS_KEY = 'BfFTWoN8xvMWRzJJmEsTrack7aZ9ANbmjMtKxWqezHgCfNwiXKUsvpQhS0';
 
 const newQuestions = [
   {
@@ -77,8 +77,9 @@ const newQuestions = [
   },
 ];
 
+const colors = ['#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444', '#10b981'];
+
 async function getImage(query) {
-  if (!PEXELS_KEY) return null;
   try {
     const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5`, {
       headers: { Authorization: PEXELS_KEY },
@@ -95,33 +96,26 @@ async function getImage(query) {
 }
 
 async function main() {
-  // Get or create MIA user
-  let miaUser = await prisma.user.findFirst({ where: { username: 'MIA' } });
-  if (!miaUser) {
-    miaUser = await prisma.user.create({
-      data: {
-        email: 'mia@wisery.live',
-        passwordHash: 'system',
-        displayName: 'MIA',
-        username: 'MIA',
-        role: 'admin',
-        emailVerified: true,
-        badge: 'oracle',
-        xp: 10000,
-        level: 50,
-        reputation: 9999,
-      },
-    });
-    console.log('Created MIA user');
+  const client = new Client({ host: '127.0.0.1', port: 5432, user: 'wisery', password: 'wisery2026', database: 'wisery_db' });
+  await client.connect();
+
+  // Get MIA user
+  const miaRes = await client.query("SELECT id FROM \"User\" WHERE username = 'MIA' LIMIT 1");
+  if (miaRes.rows.length === 0) {
+    console.log('MIA user not found! Run seed-raw.js first.');
+    await client.end();
+    return;
   }
+  const miaId = miaRes.rows[0].id;
+  console.log(`MIA user ID: ${miaId}`);
 
   let created = 0;
   for (let i = 0; i < newQuestions.length; i++) {
     const t = newQuestions[i];
 
-    // Check if question already exists
-    const existing = await prisma.question.findFirst({ where: { title: t.q } });
-    if (existing) {
+    // Check if exists
+    const existRes = await client.query('SELECT id FROM "Question" WHERE title = $1 LIMIT 1', [t.q]);
+    if (existRes.rows.length > 0) {
       console.log(`[${i+1}] SKIP (exists): ${t.q}`);
       continue;
     }
@@ -132,32 +126,27 @@ async function main() {
     console.log(`[${i+1}/${newQuestions.length}] Creating: ${t.q}`);
     const imageUrl = await getImage(t.img);
 
-    await prisma.question.create({
-      data: {
-        title: t.q,
-        description: t.desc,
-        category: t.cat,
-        imageUrl: imageUrl,
-        userId: miaUser.id,
-        status: 'active',
-        visibility: 'public',
-        expiresAt,
-        options: {
-          create: t.opts.map((label, idx) => ({
-            label,
-            order: idx,
-            color: ['#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444', '#10b981'][idx % 5],
-          })),
-        },
-      },
-    });
+    const qId = randomUUID();
+    await client.query(
+      `INSERT INTO "Question" (id, title, description, category, "imageUrl", "userId", status, visibility, "expiresAt", "totalVotes", "totalComments", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, 'active', 'public', $7, 0, 0, NOW(), NOW())`,
+      [qId, t.q, t.desc, t.cat, imageUrl, miaId, expiresAt]
+    );
+
+    for (let j = 0; j < t.opts.length; j++) {
+      await client.query(
+        `INSERT INTO "QuestionOption" (id, "questionId", label, "order", color, "voteCount")
+         VALUES ($1, $2, $3, $4, $5, 0)`,
+        [randomUUID(), qId, t.opts[j], j, colors[j % colors.length]]
+      );
+    }
+
     created++;
     console.log(`  ✓ Created with ${imageUrl ? 'image' : 'no image'}`);
   }
 
   console.log(`\nDone! Created ${created} new questions by MIA.`);
+  await client.end();
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+main().catch(console.error);
