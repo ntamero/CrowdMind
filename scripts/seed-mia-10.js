@@ -135,9 +135,9 @@ async function main() {
 
     for (let j = 0; j < t.opts.length; j++) {
       await client.query(
-        `INSERT INTO "QuestionOption" (id, "questionId", label, "order", color, "voteCount")
-         VALUES ($1, $2, $3, $4, $5, 0)`,
-        [randomUUID(), qId, t.opts[j], j, colors[j % colors.length]]
+        `INSERT INTO "QuestionOption" (id, "questionId", label, "voteCount")
+         VALUES ($1, $2, $3, 0)`,
+        [randomUUID(), qId, t.opts[j]]
       );
     }
 
