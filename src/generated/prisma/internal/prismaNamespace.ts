@@ -398,6 +398,8 @@ export const ModelName = {
   PostLike: 'PostLike',
   Follow: 'Follow',
   TokenTransaction: 'TokenTransaction',
+  PoolWallet: 'PoolWallet',
+  PoolTransaction: 'PoolTransaction',
   Bookmark: 'Bookmark',
   Notification: 'Notification',
   UserAchievement: 'UserAchievement',
@@ -417,7 +419,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "question" | "questionOption" | "vote" | "comment" | "commentLike" | "prediction" | "predictionOption" | "predictionParticipation" | "post" | "postLike" | "follow" | "tokenTransaction" | "bookmark" | "notification" | "userAchievement" | "hashtag"
+    modelProps: "user" | "session" | "question" | "questionOption" | "vote" | "comment" | "commentLike" | "prediction" | "predictionOption" | "predictionParticipation" | "post" | "postLike" | "follow" | "tokenTransaction" | "poolWallet" | "poolTransaction" | "bookmark" | "notification" | "userAchievement" | "hashtag"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1457,6 +1459,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PoolWallet: {
+      payload: Prisma.$PoolWalletPayload<ExtArgs>
+      fields: Prisma.PoolWalletFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PoolWalletFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PoolWalletFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        findFirst: {
+          args: Prisma.PoolWalletFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PoolWalletFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        findMany: {
+          args: Prisma.PoolWalletFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>[]
+        }
+        create: {
+          args: Prisma.PoolWalletCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        createMany: {
+          args: Prisma.PoolWalletCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PoolWalletCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>[]
+        }
+        delete: {
+          args: Prisma.PoolWalletDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        update: {
+          args: Prisma.PoolWalletUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        deleteMany: {
+          args: Prisma.PoolWalletDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PoolWalletUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PoolWalletUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>[]
+        }
+        upsert: {
+          args: Prisma.PoolWalletUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolWalletPayload>
+        }
+        aggregate: {
+          args: Prisma.PoolWalletAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePoolWallet>
+        }
+        groupBy: {
+          args: Prisma.PoolWalletGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PoolWalletGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PoolWalletCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PoolWalletCountAggregateOutputType> | number
+        }
+      }
+    }
+    PoolTransaction: {
+      payload: Prisma.$PoolTransactionPayload<ExtArgs>
+      fields: Prisma.PoolTransactionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PoolTransactionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PoolTransactionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        findFirst: {
+          args: Prisma.PoolTransactionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PoolTransactionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        findMany: {
+          args: Prisma.PoolTransactionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>[]
+        }
+        create: {
+          args: Prisma.PoolTransactionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        createMany: {
+          args: Prisma.PoolTransactionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PoolTransactionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>[]
+        }
+        delete: {
+          args: Prisma.PoolTransactionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        update: {
+          args: Prisma.PoolTransactionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PoolTransactionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PoolTransactionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PoolTransactionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PoolTransactionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PoolTransactionPayload>
+        }
+        aggregate: {
+          args: Prisma.PoolTransactionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePoolTransaction>
+        }
+        groupBy: {
+          args: Prisma.PoolTransactionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PoolTransactionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PoolTransactionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PoolTransactionCountAggregateOutputType> | number
+        }
+      }
+    }
     Bookmark: {
       payload: Prisma.$BookmarkPayload<ExtArgs>
       fields: Prisma.BookmarkFieldRefs
@@ -1991,6 +2141,32 @@ export const TokenTransactionScalarFieldEnum = {
 export type TokenTransactionScalarFieldEnum = (typeof TokenTransactionScalarFieldEnum)[keyof typeof TokenTransactionScalarFieldEnum]
 
 
+export const PoolWalletScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  totalWSR: 'totalWSR',
+  totalXPFees: 'totalXPFees',
+  txCount: 'txCount',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PoolWalletScalarFieldEnum = (typeof PoolWalletScalarFieldEnum)[keyof typeof PoolWalletScalarFieldEnum]
+
+
+export const PoolTransactionScalarFieldEnum = {
+  id: 'id',
+  poolId: 'poolId',
+  userId: 'userId',
+  feeXP: 'feeXP',
+  feeWSR: 'feeWSR',
+  description: 'description',
+  createdAt: 'createdAt'
+} as const
+
+export type PoolTransactionScalarFieldEnum = (typeof PoolTransactionScalarFieldEnum)[keyof typeof PoolTransactionScalarFieldEnum]
+
+
 export const BookmarkScalarFieldEnum = {
   userId: 'userId',
   questionId: 'questionId',
@@ -2265,6 +2441,8 @@ export type GlobalOmitConfig = {
   postLike?: Prisma.PostLikeOmit
   follow?: Prisma.FollowOmit
   tokenTransaction?: Prisma.TokenTransactionOmit
+  poolWallet?: Prisma.PoolWalletOmit
+  poolTransaction?: Prisma.PoolTransactionOmit
   bookmark?: Prisma.BookmarkOmit
   notification?: Prisma.NotificationOmit
   userAchievement?: Prisma.UserAchievementOmit

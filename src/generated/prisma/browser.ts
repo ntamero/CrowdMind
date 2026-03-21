@@ -88,6 +88,16 @@ export type Follow = Prisma.FollowModel
  */
 export type TokenTransaction = Prisma.TokenTransactionModel
 /**
+ * Model PoolWallet
+ * 
+ */
+export type PoolWallet = Prisma.PoolWalletModel
+/**
+ * Model PoolTransaction
+ * 
+ */
+export type PoolTransaction = Prisma.PoolTransactionModel
+/**
  * Model Bookmark
  * 
  */

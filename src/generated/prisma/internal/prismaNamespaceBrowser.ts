@@ -65,6 +65,8 @@ export const ModelName = {
   PostLike: 'PostLike',
   Follow: 'Follow',
   TokenTransaction: 'TokenTransaction',
+  PoolWallet: 'PoolWallet',
+  PoolTransaction: 'PoolTransaction',
   Bookmark: 'Bookmark',
   Notification: 'Notification',
   UserAchievement: 'UserAchievement',
@@ -284,6 +286,32 @@ export const TokenTransactionScalarFieldEnum = {
 } as const
 
 export type TokenTransactionScalarFieldEnum = (typeof TokenTransactionScalarFieldEnum)[keyof typeof TokenTransactionScalarFieldEnum]
+
+
+export const PoolWalletScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  totalWSR: 'totalWSR',
+  totalXPFees: 'totalXPFees',
+  txCount: 'txCount',
+  updatedAt: 'updatedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PoolWalletScalarFieldEnum = (typeof PoolWalletScalarFieldEnum)[keyof typeof PoolWalletScalarFieldEnum]
+
+
+export const PoolTransactionScalarFieldEnum = {
+  id: 'id',
+  poolId: 'poolId',
+  userId: 'userId',
+  feeXP: 'feeXP',
+  feeWSR: 'feeWSR',
+  description: 'description',
+  createdAt: 'createdAt'
+} as const
+
+export type PoolTransactionScalarFieldEnum = (typeof PoolTransactionScalarFieldEnum)[keyof typeof PoolTransactionScalarFieldEnum]
 
 
 export const BookmarkScalarFieldEnum = {

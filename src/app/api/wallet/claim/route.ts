@@ -74,8 +74,16 @@ export async function POST(req: NextRequest) {
 
     const xpToConvert = claimableWSR * XP_PER_WSR;
     const totalXpDeducted = xpToConvert + CONVERSION_FEE_XP;
+    const feeWSR = CONVERSION_FEE_XP / XP_PER_WSR; // 10/250 = 0.04 WSR per conversion
 
-    // Convert XP to unclaimed WSR (atomically) — deduct XP + fee
+    // Ensure pool wallet exists
+    const pool = await prisma.poolWallet.upsert({
+      where: { type: 'fee_pool' },
+      create: { type: 'fee_pool', totalWSR: 0, totalXPFees: 0, txCount: 0 },
+      update: {},
+    });
+
+    // Convert XP to unclaimed WSR + send fee to pool (atomically)
     await prisma.$transaction([
       prisma.user.update({
         where: { id: user.id },
@@ -89,8 +97,26 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           type: 'claim',
           amount: claimableWSR,
-          description: `Converted ${xpToConvert} XP → ${claimableWSR} WSR (fee: ${CONVERSION_FEE_XP} XP)`,
+          description: `Converted ${xpToConvert} XP → ${claimableWSR} WSR (fee: ${CONVERSION_FEE_XP} XP → ${feeWSR} WSR to pool)`,
           status: 'pending',
+        },
+      }),
+      // Accumulate fee in pool wallet
+      prisma.poolWallet.update({
+        where: { id: pool.id },
+        data: {
+          totalWSR: { increment: feeWSR },
+          totalXPFees: { increment: CONVERSION_FEE_XP },
+          txCount: { increment: 1 },
+        },
+      }),
+      prisma.poolTransaction.create({
+        data: {
+          poolId: pool.id,
+          userId: user.id,
+          feeXP: CONVERSION_FEE_XP,
+          feeWSR,
+          description: `Fee from ${claimableWSR} WSR conversion`,
         },
       }),
     ]);

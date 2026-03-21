@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, Settings, Users, MessageSquare, BarChart3, Zap,
@@ -88,13 +88,7 @@ const memberEarnings = [
   { user: 'James Wilson', earned: 780.10, questions: 12, accuracy: 58.2, status: 'suspended', plan: 'Free' },
 ];
 
-const walletEntries = [
-  { user: 'Emily Davis', address: '0x7a3B...f92E', balance: 2847.50, pending: 125.30, chain: 'Base', status: 'connected' },
-  { user: 'Alex Chen', address: '0x4cD2...a81B', balance: 1247.50, pending: 89.25, chain: 'Base', status: 'connected' },
-  { user: 'Sara Kim', address: '0x9fE1...c34D', balance: 890.30, pending: 45.00, chain: 'Base', status: 'connected' },
-  { user: 'Mike Johnson', address: '', balance: 560.20, pending: 32.10, chain: '', status: 'internal' },
-  { user: 'James Wilson', address: '', balance: 180.10, pending: 0, chain: '', status: 'internal' },
-];
+// Wallet entries loaded from API (see useEffect below)
 
 const tradingActivity = [
   { id: 'tr1', user: 'Alex Chen', market: 'Bitcoin Above $150K', action: 'BUY YES', amount: 50, odds: 1.8, time: '2m ago', status: 'filled' },
@@ -119,12 +113,39 @@ const mailTemplates = [
   { id: 'm5', name: 'Premium Upgrade', type: 'marketing', lastSent: '2026-03-08', recipients: 32000, openRate: 35.1, status: 'paused' },
 ];
 
+interface PoolData {
+  pool: { totalWSR: number; totalXPFees: number; txCount: number; updatedAt: string };
+  stats: { totalUsers: number; connectedWallets: number; totalUnclaimedWSR: number; totalClaimedWSR: number };
+  walletUsers: Array<{ id: string; displayName: string | null; username: string | null; walletAddress: string | null; walletChain: string | null; xp: number; unclaimedWSR: number; totalClaimedWSR: number }>;
+  recentPoolTxs: Array<{ id: string; userId: string; feeXP: number; feeWSR: number; description: string | null; createdAt: string }>;
+}
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryEmoji, setNewCategoryEmoji] = useState('');
   const [localCategories, setLocalCategories] = useState(categoryList.map(c => ({ ...c, questionCount: Math.floor(Math.random() * 5000) + 500 })));
+  const [poolData, setPoolData] = useState<PoolData | null>(null);
+  const [poolLoading, setPoolLoading] = useState(false);
+
+  const fetchPoolData = useCallback(async () => {
+    setPoolLoading(true);
+    try {
+      const res = await fetch('/api/admin/pool');
+      if (res.ok) {
+        const data = await res.json();
+        setPoolData(data);
+      }
+    } catch {}
+    setPoolLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'wallets') {
+      fetchPoolData();
+    }
+  }, [activeTab, fetchPoolData]);
 
   const dashboardStats = [
     { icon: Users, label: 'Total Users', value: formatNumber(mockStats.totalUsers), change: '+12.5%', color: '#6366f1', positive: true },
@@ -567,11 +588,54 @@ export default function AdminPage() {
           {/* ═══════ WALLETS ═══════ */}
           {activeTab === 'wallets' && (
             <div className="space-y-5">
-              <div className="grid grid-cols-3 gap-3">
+              {/* Pool Wallet Card */}
+              <div className="bg-gradient-to-br from-amber-900/40 via-orange-900/20 to-red-900/10 border border-amber-500/20 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                      <Flame size={24} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-amber-300">Pool Wallet (Fee Collection)</p>
+                      <p className="text-[11px] text-muted-foreground">10 XP fee per conversion = 0.04 WSR to pool</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10" onClick={fetchPoolData}>
+                    <RefreshCw size={12} /> Refresh
+                  </Button>
+                </div>
+                {poolLoading ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm">Loading...</div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="bg-black/20 rounded-xl p-3 text-center">
+                      <div className="text-2xl font-black text-amber-400">{poolData?.pool.totalWSR.toFixed(4) || '0'}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">WSR in Pool</div>
+                      <div className="text-[10px] text-muted-foreground/60">${((poolData?.pool.totalWSR || 0) * 0.001).toFixed(6)}</div>
+                    </div>
+                    <div className="bg-black/20 rounded-xl p-3 text-center">
+                      <div className="text-2xl font-black text-orange-400">{poolData?.pool.totalXPFees || 0}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">XP Fees Collected</div>
+                    </div>
+                    <div className="bg-black/20 rounded-xl p-3 text-center">
+                      <div className="text-2xl font-black text-red-400">{poolData?.pool.txCount || 0}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Conversions</div>
+                    </div>
+                    <div className="bg-black/20 rounded-xl p-3 text-center">
+                      <div className="text-2xl font-black text-emerald-400">{(poolData?.stats.totalUnclaimedWSR || 0).toFixed(2)}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Unclaimed WSR</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Wallet Stats */}
+              <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: 'Total Wallets', value: '5', icon: Wallet, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Connected (Web3)', value: '3', icon: ExternalLink, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Total Balance', value: '$5,725.60', icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Total Users', value: poolData?.stats.totalUsers || 0, icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                  { label: 'Connected Wallets', value: poolData?.stats.connectedWallets || 0, icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Total Claimed WSR', value: `${(poolData?.stats.totalClaimedWSR || 0).toFixed(2)}`, icon: ArrowUpRight, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                  { label: 'WSR Rate', value: '$0.001', icon: TrendingUp, color: 'text-amber-400', bg: 'bg-amber-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
@@ -580,24 +644,60 @@ export default function AdminPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Connected Wallets Table */}
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[1fr_140px_100px_80px_80px_80px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <span>User</span><span>Address</span><span>Balance</span><span>Pending</span><span>Chain</span><span>Status</span>
+                <h3 className="text-sm font-bold flex items-center gap-2 px-4 py-3 border-b border-border/20">
+                  <Wallet size={15} className="text-indigo-400" /> Connected Wallets
+                </h3>
+                <div className="grid grid-cols-[1fr_160px_80px_90px_80px_70px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span>User</span><span>Address</span><span>XP</span><span>Unclaimed WSR</span><span>Claimed WSR</span><span>Chain</span>
                 </div>
-                {walletEntries.map((w) => (
-                  <div key={w.user} className="grid grid-cols-[1fr_140px_100px_80px_80px_80px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
+                {poolData?.walletUsers.length === 0 && (
+                  <div className="text-center py-6 text-muted-foreground text-sm">No wallets connected yet</div>
+                )}
+                {poolData?.walletUsers.map((w) => (
+                  <div key={w.id} className="grid grid-cols-[1fr_160px_80px_90px_80px_70px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">{w.user.charAt(0)}</div>
-                      <span className="text-[12px] font-semibold">{w.user}</span>
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                        {(w.displayName || w.username || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-[12px] font-semibold">{w.displayName || w.username || 'Unknown'}</span>
                     </div>
-                    <code className="text-[11px] text-muted-foreground">{w.address || '—'}</code>
-                    <span className="text-[12px] font-bold">${w.balance.toLocaleString()}</span>
-                    <span className="text-[12px] text-amber-400">${w.pending}</span>
-                    <Badge className="text-[9px] bg-indigo-500/10 text-indigo-400 border-0 w-fit">{w.chain || 'Internal'}</Badge>
-                    <Badge className={cn('text-[9px] border-0 w-fit', w.status === 'connected' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400')}>{w.status}</Badge>
+                    <code className="text-[11px] text-muted-foreground truncate">{w.walletAddress ? `${w.walletAddress.slice(0, 6)}...${w.walletAddress.slice(-4)}` : '—'}</code>
+                    <span className="text-[12px] font-bold text-emerald-400">{w.xp.toLocaleString()}</span>
+                    <span className="text-[12px] font-bold text-amber-400">{w.unclaimedWSR.toFixed(2)}</span>
+                    <span className="text-[12px] font-bold text-purple-400">{w.totalClaimedWSR.toFixed(2)}</span>
+                    <Badge className="text-[9px] bg-indigo-500/10 text-indigo-400 border-0 w-fit">{w.walletChain || 'Polygon'}</Badge>
                   </div>
                 ))}
               </div>
+
+              {/* Recent Pool Transactions */}
+              {poolData?.recentPoolTxs && poolData.recentPoolTxs.length > 0 && (
+                <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                    <Activity size={15} className="text-amber-400" /> Recent Fee Transactions
+                  </h3>
+                  <div className="space-y-1.5">
+                    {poolData.recentPoolTxs.map((tx) => (
+                      <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                          <Flame size={14} className="text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-medium">{tx.description}</p>
+                          <p className="text-[10px] text-muted-foreground">{new Date(tx.createdAt).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[13px] font-bold text-amber-400">+{tx.feeWSR.toFixed(4)} WSR</p>
+                          <p className="text-[9px] text-muted-foreground">{tx.feeXP} XP fee</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

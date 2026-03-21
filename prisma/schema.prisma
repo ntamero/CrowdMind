@@ -290,6 +290,35 @@ model TokenTransaction {
   @@index([status])
 }
 
+// ═══════════ POOL WALLET (FEE COLLECTION) ═══════════
+
+model PoolWallet {
+  id          String   @id @default(uuid())
+  type        String   @unique @default("fee_pool") // fee_pool, rewards, treasury
+  totalWSR    Float    @default(0)  // Accumulated WSR from conversion fees
+  totalXPFees Int      @default(0)  // Total XP fees collected
+  txCount     Int      @default(0)  // Number of fee transactions
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  entries PoolTransaction[]
+}
+
+model PoolTransaction {
+  id          String   @id @default(uuid())
+  poolId      String
+  userId      String   // User who paid the fee
+  feeXP       Int      // XP fee amount (10)
+  feeWSR      Float    // WSR equivalent of fee (10/250 = 0.04)
+  description String?
+  createdAt   DateTime @default(now())
+
+  pool PoolWallet @relation(fields: [poolId], references: [id], onDelete: Cascade)
+
+  @@index([poolId])
+  @@index([createdAt])
+}
+
 // ═══════════ BOOKMARKS & NOTIFICATIONS ═══════════
 
 model Bookmark {
