@@ -44,6 +44,9 @@ export default function WalletPage() {
   const [converting, setConverting] = useState(false);
   const [convertAmount, setConvertAmount] = useState(1);
   const [showConvert, setShowConvert] = useState(false);
+  const [convertDirection, setConvertDirection] = useState<'xp-to-wsr' | 'wsr-to-xp'>('xp-to-wsr');
+  const [depositAmount, setDepositAmount] = useState(1);
+  const [depositing, setDepositing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [onChainBalance, setOnChainBalance] = useState<{ wsr: string; pol: string } | null>(null);
@@ -99,6 +102,30 @@ export default function WalletPage() {
       setMessage({ type: 'error', text: 'Network error' });
     }
     setConverting(false);
+  };
+
+  const handleDeposit = async () => {
+    if (depositing) return;
+    setDepositing(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/wallet/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: depositAmount }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message });
+        setShowConvert(false);
+        fetchClaimData();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Deposit failed' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' });
+    }
+    setDepositing(false);
   };
 
   const xp = claimData?.currentXP ?? profile?.xp ?? 0;
@@ -159,16 +186,25 @@ export default function WalletPage() {
             </div>
           </div>
 
-          {/* Convert XP → WSR button */}
+          {/* Convert buttons: XP↔WSR */}
           <div className="mt-5 flex items-center gap-3">
             <Button
-              onClick={() => setShowConvert(!showConvert)}
-              disabled={claimableWSR < 1}
+              onClick={() => { setConvertDirection('xp-to-wsr'); setShowConvert(!showConvert || convertDirection !== 'xp-to-wsr'); }}
+              disabled={claimableWSR < 1 && convertDirection === 'xp-to-wsr' && showConvert}
               className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white gap-2 h-12 text-sm font-bold shadow-lg shadow-amber-600/20"
             >
-              <ArrowRightLeft size={16} />
-              Convert XP to WSR
-              {claimableWSR > 0 && <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{claimableWSR} WSR available</span>}
+              <ArrowUpRight size={16} />
+              XP → WSR
+              {claimableWSR > 0 && <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{claimableWSR} WSR</span>}
+            </Button>
+            <Button
+              onClick={() => { setConvertDirection('wsr-to-xp'); setShowConvert(!showConvert || convertDirection !== 'wsr-to-xp'); }}
+              disabled={unclaimedWSR < 1 && convertDirection === 'wsr-to-xp' && showConvert}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white gap-2 h-12 text-sm font-bold shadow-lg shadow-blue-600/20"
+            >
+              <ArrowDownLeft size={16} />
+              WSR → XP
+              {unclaimedWSR > 0 && <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">{unclaimedWSR} WSR</span>}
             </Button>
             {!isConnected && (
               <Button
@@ -178,13 +214,13 @@ export default function WalletPage() {
                 className="gap-2 h-12 text-sm font-bold border-amber-500/30 text-amber-400"
               >
                 <Wallet size={16} />
-                {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
+                {isConnecting ? 'Connecting...' : 'Connect'}
               </Button>
             )}
           </div>
         </div>
 
-        {/* ─── Convert Panel ─── */}
+        {/* ─── Convert Panel (XP↔WSR) ─── */}
         <AnimatePresence>
           {showConvert && (
             <motion.div
@@ -193,111 +229,190 @@ export default function WalletPage() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden mb-6"
             >
-              <div className="bg-card/50 border border-amber-500/20 rounded-2xl p-5">
-                <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
-                  <ArrowRightLeft size={16} className="text-amber-400" />
-                  Convert XP to WSR Tokens
-                </h3>
-
-                {/* Conversion info */}
-                <div className="bg-secondary/20 rounded-xl p-4 mb-4">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Rate</span>
-                    <span className="font-bold">{xpPerWSR} XP = 1 WSR</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Conversion Fee</span>
-                    <span className="font-bold text-orange-400">{fee} XP per transaction</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Your XP</span>
-                    <span className="font-bold font-mono">{xp.toLocaleString()} XP</span>
-                  </div>
+              <div className={cn(
+                'border rounded-2xl p-5',
+                convertDirection === 'xp-to-wsr'
+                  ? 'bg-card/50 border-amber-500/20'
+                  : 'bg-card/50 border-blue-500/20'
+              )}>
+                {/* Direction tabs */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setConvertDirection('xp-to-wsr')}
+                    className={cn(
+                      'flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all',
+                      convertDirection === 'xp-to-wsr'
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'bg-secondary/20 text-muted-foreground border border-transparent hover:bg-secondary/30'
+                    )}
+                  >
+                    <ArrowUpRight size={14} /> XP → WSR
+                  </button>
+                  <button
+                    onClick={() => setConvertDirection('wsr-to-xp')}
+                    className={cn(
+                      'flex-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all',
+                      convertDirection === 'wsr-to-xp'
+                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        : 'bg-secondary/20 text-muted-foreground border border-transparent hover:bg-secondary/30'
+                    )}
+                  >
+                    <ArrowDownLeft size={14} /> WSR → XP
+                  </button>
                 </div>
 
-                {/* Amount selector */}
-                <div className="mb-4">
-                  <p className="text-xs text-muted-foreground mb-2">Amount to convert:</p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {[1, 5, 10, 25].filter(a => a <= claimableWSR).map(amt => (
-                      <button
-                        key={amt}
-                        onClick={() => setConvertAmount(amt)}
-                        className={cn(
-                          'px-3 py-2 rounded-lg text-xs font-bold transition-all border',
-                          convertAmount === amt
-                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                            : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40'
+                {/* ══ XP → WSR ══ */}
+                {convertDirection === 'xp-to-wsr' && (
+                  <>
+                    <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                      <ArrowUpRight size={16} className="text-amber-400" />
+                      Convert XP to WSR Tokens
+                    </h3>
+
+                    <div className="bg-secondary/20 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Rate</span>
+                        <span className="font-bold">{xpPerWSR} XP = 1 WSR</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Fee</span>
+                        <span className="font-bold text-orange-400">{fee} XP per transaction</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Your XP</span>
+                        <span className="font-bold font-mono">{xp.toLocaleString()} XP</span>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-xs text-muted-foreground mb-2">Amount to convert:</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {[1, 5, 10, 25].filter(a => a <= claimableWSR).map(amt => (
+                          <button key={amt} onClick={() => setConvertAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', convertAmount === amt ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            {amt} WSR
+                          </button>
+                        ))}
+                        {claimableWSR >= 1 && (
+                          <button onClick={() => setConvertAmount(claimableWSR)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', convertAmount === claimableWSR ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            MAX ({claimableWSR} WSR)
+                          </button>
                         )}
-                      >
-                        {amt} WSR
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setConvertAmount(claimableWSR)}
-                      className={cn(
-                        'px-3 py-2 rounded-lg text-xs font-bold transition-all border',
-                        convertAmount === claimableWSR
-                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                          : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40'
-                      )}
-                    >
-                      MAX ({claimableWSR} WSR)
-                    </button>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
-                {/* Summary */}
-                <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 mb-4">
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">XP to convert</span>
-                    <span className="font-bold font-mono">{(convertAmount * xpPerWSR).toLocaleString()} XP</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">Fee</span>
-                    <span className="font-bold font-mono text-orange-400">-{fee} XP</span>
-                  </div>
-                  <div className="border-t border-amber-500/10 pt-2 mt-2 flex items-center justify-between text-sm">
-                    <span className="font-bold">Total deducted</span>
-                    <span className="font-bold font-mono">{(convertAmount * xpPerWSR + fee).toLocaleString()} XP</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="font-bold text-emerald-400">You receive</span>
-                    <span className="font-bold font-mono text-emerald-400">{convertAmount} WSR</span>
-                  </div>
-                </div>
+                    <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">XP to spend</span>
+                        <span className="font-bold font-mono">{(convertAmount * xpPerWSR).toLocaleString()} XP</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">Fee</span>
+                        <span className="font-bold font-mono text-orange-400">-{fee} XP</span>
+                      </div>
+                      <div className="border-t border-amber-500/10 pt-2 mt-2 flex items-center justify-between text-sm">
+                        <span className="font-bold">Total deducted</span>
+                        <span className="font-bold font-mono">{(convertAmount * xpPerWSR + fee).toLocaleString()} XP</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mt-1">
+                        <span className="font-bold text-emerald-400">You receive</span>
+                        <span className="font-bold font-mono text-emerald-400">{convertAmount} WSR</span>
+                      </div>
+                    </div>
 
-                {cooldown > 0 && (
-                  <div className="text-xs text-orange-400 mb-3 flex items-center gap-1.5">
-                    <Clock size={12} />
-                    Cooldown: wait {cooldown} minutes before next conversion
-                  </div>
+                    {cooldown > 0 && (
+                      <div className="text-xs text-orange-400 mb-3 flex items-center gap-1.5">
+                        <Clock size={12} /> Cooldown: wait {cooldown} minutes
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button onClick={handleConvert} disabled={converting || cooldown > 0 || claimableWSR < 1} className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white h-11 font-bold gap-2">
+                        {converting ? <><RefreshCw size={14} className="animate-spin" /> Converting...</> : <><ArrowUpRight size={14} /> Convert {convertAmount} WSR</>}
+                      </Button>
+                      <Button onClick={() => setShowConvert(false)} variant="outline" className="h-11 border-border/30">Cancel</Button>
+                    </div>
+
+                    {claimableWSR < 1 && (
+                      <p className="text-[10px] text-muted-foreground mt-3">
+                        Need at least {xpPerWSR + fee} XP ({xpPerWSR} XP + {fee} XP fee) to convert 1 WSR.
+                      </p>
+                    )}
+                  </>
                 )}
 
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleConvert}
-                    disabled={converting || cooldown > 0 || claimableWSR < 1}
-                    className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white h-11 font-bold gap-2"
-                  >
-                    {converting ? (
-                      <><RefreshCw size={14} className="animate-spin" /> Converting...</>
-                    ) : (
-                      <><CheckCircle2 size={14} /> Convert {convertAmount} WSR</>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setShowConvert(false)}
-                    variant="outline"
-                    className="h-11 border-border/30"
-                  >
-                    Cancel
-                  </Button>
-                </div>
+                {/* ══ WSR → XP ══ */}
+                {convertDirection === 'wsr-to-xp' && (
+                  <>
+                    <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                      <ArrowDownLeft size={16} className="text-blue-400" />
+                      Convert WSR to XP
+                    </h3>
 
-                <p className="text-[10px] text-muted-foreground mt-3">
-                  WSR tokens will be held as unclaimed until MetaMask wallet is connected for on-chain distribution.
-                </p>
+                    <div className="bg-secondary/20 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Rate</span>
+                        <span className="font-bold">1 WSR = {xpPerWSR} XP</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-muted-foreground">Fee</span>
+                        <span className="font-bold text-orange-400">{fee} XP per transaction</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Your Unclaimed WSR</span>
+                        <span className="font-bold font-mono text-blue-400">{unclaimedWSR} WSR</span>
+                      </div>
+                    </div>
+
+                    {unclaimedWSR >= 1 ? (
+                      <>
+                        <div className="mb-4">
+                          <p className="text-xs text-muted-foreground mb-2">Amount to convert:</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {[1, 5, 10, 25].filter(a => a <= Math.floor(unclaimedWSR)).map(amt => (
+                              <button key={amt} onClick={() => setDepositAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', depositAmount === amt ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                                {amt} WSR
+                              </button>
+                            ))}
+                            <button onClick={() => setDepositAmount(Math.floor(unclaimedWSR))} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', depositAmount === Math.floor(unclaimedWSR) ? 'bg-blue-500/20 text-blue-400 border-blue-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                              MAX ({Math.floor(unclaimedWSR)} WSR)
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-4 mb-4">
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">WSR to convert</span>
+                            <span className="font-bold font-mono">{depositAmount} WSR</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">XP value</span>
+                            <span className="font-bold font-mono">{(depositAmount * xpPerWSR).toLocaleString()} XP</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm mb-1">
+                            <span className="text-muted-foreground">Fee</span>
+                            <span className="font-bold font-mono text-orange-400">-{fee} XP</span>
+                          </div>
+                          <div className="border-t border-blue-500/10 pt-2 mt-2 flex items-center justify-between text-sm">
+                            <span className="font-bold text-emerald-400">You receive</span>
+                            <span className="font-bold font-mono text-emerald-400">{(depositAmount * xpPerWSR - fee).toLocaleString()} XP</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <Button onClick={handleDeposit} disabled={depositing || unclaimedWSR < 1} className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white h-11 font-bold gap-2">
+                            {depositing ? <><RefreshCw size={14} className="animate-spin" /> Converting...</> : <><ArrowDownLeft size={14} /> Convert {depositAmount} WSR → {(depositAmount * xpPerWSR - fee).toLocaleString()} XP</>}
+                          </Button>
+                          <Button onClick={() => setShowConvert(false)} variant="outline" className="h-11 border-border/30">Cancel</Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-sm text-muted-foreground mb-2">No unclaimed WSR available</p>
+                        <p className="text-xs text-muted-foreground">First convert XP → WSR, then you can convert back if needed.</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </motion.div>
           )}
