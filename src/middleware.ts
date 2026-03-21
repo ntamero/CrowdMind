@@ -1,12 +1,8 @@
-import { updateSession } from '@/lib/supabase/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // Skip Supabase session refresh if not configured
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return NextResponse.next();
-  }
-  return await updateSession(request);
+  // JWT auth is handled via httpOnly cookies — no middleware refresh needed
+  return NextResponse.next();
 }
 
 export const config = {

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//d/WISERY/crowdmind-ai/**)",
+      "Bash(find ./supabase -type f ! -path */node_modules/*)",
+      "Bash(cp -r \"D:/WISERY/crowdmind-ai/\"* \"D:/CLAUDE/CROWDMIND/\")",
+      "Bash(cp -r \"D:/WISERY/crowdmind-ai/\".* \"D:/CLAUDE/CROWDMIND/\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(ssh root@37.27.247.119 \"sudo -u postgres psql -c \"\"ALTER USER wisery WITH PASSWORD ''Wsr2026SecureDB!'';\"\" && echo ''Password set OK''\")",
+      "Bash(npx next:*)",
+      "Bash(npm install:*)",
+      "Bash(ssh root@37.27.247.119 \"pm2 logs wisery --lines 30 --nostream 2>&1\")",
+      "Bash(curl -s \"https://wisery.live/api/questions/f63a6277-840f-4251-b922-b0f98e0d9899\")",
+      "Bash(ssh root@37.27.247.119 \"PGPASSWORD=wisery2026 psql -U wisery -d wisery_db -t -c \"\"SELECT id, category, imageUrl, substring\\(title from 1 for 60\\) as short_title FROM \\\\\"\"Question\\\\\"\" ORDER BY \\\\\"\"createdAt\\\\\"\" DESC;\"\"\")",
+      "Bash(ssh root@37.27.247.119 \"cd /var/www/wisery && npx prisma generate 2>&1 | tail -5\")",
+      "Bash(curl -s \"https://wisery.live/api/markets/quick\")",
+      "Bash(ssh root@37.27.247.119 \"mkdir -p /var/www/crowdmind/src/app/markets/\\\\[id\\\\] /var/www/crowdmind/src/app/api/chat\")",
+      "Bash(ssh root@37.27.247.119 \"mkdir -p /var/www/wisery/src/app/markets/\\\\[id\\\\] /var/www/wisery/src/app/api/chat /var/www/wisery/src/app/api/markets/quick\")",
+      "WebFetch(domain:polymarket.com)",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

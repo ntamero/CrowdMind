@@ -4,22 +4,27 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Brain, Search, Plus, Menu, TrendingUp, Trophy, Zap,
+  Brain, Search, Plus, Menu, TrendingUp, Trophy, Zap, Rss,
   User, Settings, Crown, LogOut, Bell, X, LayoutDashboard,
+  Wallet, Gift, Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/supabase/auth-context';
+import { useWallet } from '@/context/WalletContext';
 
 const navLinks = [
-  { href: '/', icon: TrendingUp, label: 'Markets' },
+  { href: '/', icon: TrendingUp, label: 'Explore' },
+  { href: '/feed', icon: Rss, label: 'Feed' },
   { href: '/predictions', icon: Zap, label: 'Predict' },
+  { href: '/earn', icon: Gift, label: 'Earn' },
   { href: '/leaderboard', icon: Trophy, label: 'Ranks' },
 ];
 
 export default function Navbar() {
   const { user, profile, loading, signOut } = useAuth();
+  const { address, isConnected, isConnecting, chainName, connect } = useWallet();
   const [searchOpen, setSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -42,11 +47,11 @@ export default function Navbar() {
       <div className="container h-full flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 no-underline shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-            <Brain size={18} className="text-white" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            <Sparkles size={18} className="text-white" />
           </div>
           <span className="text-lg font-bold tracking-tight hidden sm:block">
-            Crowd<span className="text-indigo-400">Mind</span>
+            Wis<span className="text-amber-400">ery</span>
           </span>
         </Link>
 
@@ -54,13 +59,13 @@ export default function Navbar() {
         <div className="hidden md:flex flex-1 max-w-md relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search markets..."
+            placeholder="Search questions, people, topics..."
             className="pl-9 h-9 bg-secondary/50 border-border/50 text-sm"
           />
         </div>
 
         {/* Nav links */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-1.5 text-[13px]">
@@ -77,8 +82,31 @@ export default function Navbar() {
             <Search size={16} />
           </Button>
 
+          {/* Connect Wallet button */}
+          {isConnected && address ? (
+            <Link href="/wallet">
+              <Button
+                size="sm"
+                className="bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 gap-1.5 h-8 px-3 text-[12px] font-bold hidden sm:flex hover:bg-emerald-600/30"
+              >
+                <Wallet size={14} />
+                {address.slice(0, 6)}...{address.slice(-4)}
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              size="sm"
+              onClick={connect}
+              disabled={isConnecting}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white gap-1.5 h-8 px-3 text-[12px] font-bold shadow-lg shadow-amber-600/20 hidden sm:flex"
+            >
+              <Wallet size={14} />
+              {isConnecting ? 'Connecting...' : 'Connect'}
+            </Button>
+          )}
+
           <Link href="/ask">
-            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 h-8 px-3 text-[13px] font-semibold">
+            <Button size="sm" variant="outline" className="gap-1.5 h-8 px-3 text-[13px] font-semibold border-border/50">
               <Plus size={14} />
               <span className="hidden sm:inline">Ask</span>
             </Button>
@@ -87,7 +115,7 @@ export default function Navbar() {
           {!loading && user && (
             <Button variant="ghost" size="icon" className="h-8 w-8 relative">
               <Bell size={16} />
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-indigo-500 rounded-full" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-500 rounded-full" />
             </Button>
           )}
 
@@ -97,13 +125,13 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="w-8 h-8 rounded-lg overflow-hidden border border-border/50 hover:border-indigo-500/50 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg overflow-hidden border border-border/50 hover:border-amber-500/50 transition-colors cursor-pointer"
               >
                 {profile?.avatar_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-indigo-600 flex items-center justify-center">
+                  <div className="w-full h-full bg-amber-600 flex items-center justify-center">
                     <User size={14} className="text-white" />
                   </div>
                 )}
@@ -131,14 +159,17 @@ export default function Navbar() {
                       <Link href="/dashboard" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
                         <LayoutDashboard size={14} /> Dashboard
                       </Link>
+                      <Link href="/wallet" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <Wallet size={14} /> Wallet
+                      </Link>
+                      <Link href="/earn" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
+                        <Gift size={14} /> Earn
+                      </Link>
                       <Link href="/profile" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
                         <User size={14} /> Profile
                       </Link>
                       <Link href="/settings" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
                         <Settings size={14} /> Settings
-                      </Link>
-                      <Link href="/pricing" onClick={() => setDropdownOpen(false)} className="flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg hover:bg-secondary/50 transition-colors no-underline text-foreground">
-                        <Crown size={14} /> Premium
                       </Link>
                     </div>
                     <div className="h-px bg-border/50" />
@@ -181,7 +212,7 @@ export default function Navbar() {
             <div className="p-3">
               <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search markets..." className="pl-9 h-9 bg-secondary/50 border-border/50" autoFocus />
+                <Input placeholder="Search questions, people..." className="pl-9 h-9 bg-secondary/50 border-border/50" autoFocus />
               </div>
             </div>
           </motion.div>
@@ -219,6 +250,12 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 ))}
+                <div className="h-px bg-border/30 my-2" />
+                <Button
+                  className="w-full justify-start gap-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold"
+                >
+                  <Wallet size={18} /> Connect Wallet
+                </Button>
               </div>
             </motion.div>
           </>

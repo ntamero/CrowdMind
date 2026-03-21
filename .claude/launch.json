@@ -3,9 +3,9 @@
   "configurations": [
     {
       "name": "dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--turbopack"],
-      "port": 3000
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "-p", "3200"],
+      "port": 3200
     }
   ]
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Trophy,
   Medal,
@@ -14,7 +15,6 @@ import {
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { mockLeaderboard } from '@/lib/mock-data';
 import { formatNumber, getBadgeColor, cn } from '@/lib/utils';
 
 const containerVariants = {
@@ -41,8 +41,13 @@ const podiumVariants = {
 };
 
 export default function LeaderboardPage() {
-  const top3 = mockLeaderboard.slice(0, 3);
-  const rest = mockLeaderboard.slice(3);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  useEffect(() => {
+    fetch('/api/leaderboard').then(r => r.json()).then(d => setLeaderboard(d.leaderboard || [])).catch(() => {});
+  }, []);
+
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-5">
@@ -103,7 +108,7 @@ export default function LeaderboardPage() {
 
         {/* Table Rows */}
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
-          {mockLeaderboard.map((entry) => (
+          {leaderboard.map((entry) => (
             <motion.div
               key={entry.rank}
               variants={rowVariants}
@@ -189,7 +194,7 @@ function PodiumCard({
   medal,
   icon,
 }: {
-  entry: (typeof mockLeaderboard)[0];
+  entry: any;
   height: string;
   medal: string;
   icon: React.ReactNode;

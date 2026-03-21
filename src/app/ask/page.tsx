@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Brain, Plus, X, Sparkles, Send, Globe, Lock } from 'lucide-react';
+import { Brain, Plus, X, Sparkles, Send, Globe, Lock, Clock } from 'lucide-react';
+import { useAuth } from '@/lib/supabase/auth-context';
 import { categories } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ const optionBgs = ['bg-indigo-500/10', 'bg-amber-500/10', 'bg-emerald-500/10', '
 
 export default function AskPage() {
   const router = useRouter();
+  const { refreshProfile } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -21,6 +23,7 @@ export default function AskPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'premium'>('public');
+  const [duration, setDuration] = useState('24h'); // 15m, 1h, 6h, 24h, 3d, 7d, 30d
   const [submitting, setSubmitting] = useState(false);
 
   const addOption = () => {
@@ -44,11 +47,50 @@ export default function AskPage() {
     }
   };
 
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
   const handleSubmit = async () => {
     if (!title || !category || options.filter((o) => o.trim()).length < 2) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    router.push('/');
+    setError('');
+
+    try {
+      const res = await fetch('/api/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          description,
+          category,
+          options: options.filter((o) => o.trim()),
+          tags,
+          visibility,
+          duration,
+        }),
+      });
+
+      if (res.status === 401) {
+        setError('Please sign in to create a question.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || 'Failed to create question');
+        setSubmitting(false);
+        return;
+      }
+
+      const question = await res.json();
+      refreshProfile();
+      setSuccess('Question created! +3 XP earned. Redirecting...');
+      setTimeout(() => router.push(`/questions/${question.id}`), 1500);
+    } catch {
+      setError('Network error. Please try again.');
+      setSubmitting(false);
+    }
   };
 
   const isValid = title && category && options.filter((o) => o.trim()).length >= 2;
@@ -238,6 +280,36 @@ export default function AskPage() {
           </div>
         </div>
 
+        {/* Duration */}
+        <div className="mb-6">
+          <label className="mb-3 block text-sm font-semibold text-foreground">
+            Duration
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: '15m', label: '15 min' },
+              { value: '1h', label: '1 hour' },
+              { value: '6h', label: '6 hours' },
+              { value: '24h', label: '24 hours' },
+              { value: '3d', label: '3 days' },
+              { value: '7d', label: '7 days' },
+              { value: '30d', label: '30 days' },
+            ].map((d) => (
+              <button
+                key={d.value}
+                onClick={() => setDuration(d.value)}
+                className={`cursor-pointer rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 border ${
+                  duration === d.value
+                    ? 'border-amber-500 bg-amber-500/10 text-amber-400'
+                    : 'border-border bg-card text-muted-foreground hover:border-amber-500/30'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* AI Preview */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -256,18 +328,30 @@ export default function AskPage() {
           </div>
         </motion.div>
 
+        {/* Error/Success Messages */}
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-400">
+            {success}
+          </div>
+        )}
+
         {/* Submit */}
         <Button
           onClick={handleSubmit}
           disabled={submitting || !isValid}
-          className="flex h-12 w-full items-center justify-center gap-2 text-base"
+          className="flex h-12 w-full items-center justify-center gap-2 text-base bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold"
         >
           {submitting ? (
             'Publishing...'
           ) : (
             <>
               <Send size={18} />
-              Publish Question
+              Publish Question (+3 XP)
             </>
           )}
         </Button>

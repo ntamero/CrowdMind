@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getQuestions, createQuestion } from '@/lib/database';
+import { getCurrentUser } from '@/lib/auth';
+import { notifyNewQuestion } from '@/lib/telegram';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,10 +28,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
-    // In production, get userId from auth session
-    const userId = body.userId || 'anonymous';
-    const question = await createQuestion(userId, body);
+    const question = await createQuestion(user.id, body);
+
+    // Notify Telegram group with direct vote link
+    notifyNewQuestion(body.title, body.category, user.username || 'user', question.id).catch(() => {});
+
     return NextResponse.json(question, { status: 201 });
   } catch (error) {
     console.error('[API /questions POST]', error);

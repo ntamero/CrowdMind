@@ -66,6 +66,7 @@ export default function QuestionCard({ question }: { question: Question }) {
   const [localTotal, setLocalTotal] = useState(question.totalVotes);
   const [bookmarked, setBookmarked] = useState(question.isBookmarked ?? false);
   const [showShare, setShowShare] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const catCfg = categoryConfig[question.category] ?? categoryConfig.other;
 
@@ -78,8 +79,8 @@ export default function QuestionCard({ question }: { question: Question }) {
   const changePositive = (question.changePercent ?? 0) >= 0;
   const timeLeft = getTimeRemaining(question.expiresAt);
 
-  // ---- Vote handler ----
-  const handleVote = (optionId: string) => {
+  // ---- Vote handler (real API) ----
+  const handleVote = async (optionId: string) => {
     if (voted) return;
     setVoted(optionId);
     const newTotal = localTotal + 1;
@@ -87,13 +88,26 @@ export default function QuestionCard({ question }: { question: Question }) {
     setLocalOptions((prev) =>
       prev.map((opt) => {
         const newVotes = opt.id === optionId ? opt.votes + 1 : opt.votes;
-        return {
-          ...opt,
-          votes: newVotes,
-          percentage: Math.round((newVotes / newTotal) * 100),
-        };
+        return { ...opt, votes: newVotes, percentage: Math.round((newVotes / newTotal) * 100) };
       }),
     );
+    try {
+      const res = await fetch('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: question.id, optionId }),
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setVoted(null);
+        setLocalTotal(localTotal);
+        setLocalOptions(question.options);
+      }
+    } catch {
+      setVoted(null);
+      setLocalTotal(localTotal);
+      setLocalOptions(question.options);
+    }
   };
 
   const showResults = !!voted;
@@ -233,7 +247,7 @@ export default function QuestionCard({ question }: { question: Question }) {
           {/* ── Vote buttons / Results (compact) ── */}
           <div className="space-y-1.5 mb-3 flex-1">
             <AnimatePresence mode="wait">
-              {localOptions.slice(0, 3).map((option) => {
+              {(expanded ? localOptions : localOptions.slice(0, 3)).map((option) => {
                 const isVoted = voted === option.id;
                 const isLeading = option.id === leading?.id;
                 return (
@@ -320,10 +334,21 @@ export default function QuestionCard({ question }: { question: Question }) {
                 );
               })}
             </AnimatePresence>
-            {localOptions.length > 3 && (
-              <p className="text-[10px] text-muted-foreground text-center">
+            {localOptions.length > 3 && !expanded && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="w-full text-[11px] text-amber-400 font-semibold text-center py-1 cursor-pointer hover:text-amber-300 transition-colors"
+              >
                 +{localOptions.length - 3} more options
-              </p>
+              </button>
+            )}
+            {expanded && localOptions.length > 3 && voted && (
+              <button
+                onClick={() => setExpanded(false)}
+                className="w-full text-[10px] text-muted-foreground text-center py-1 cursor-pointer hover:text-foreground transition-colors"
+              >
+                Show less
+              </button>
             )}
           </div>
 
@@ -332,21 +357,11 @@ export default function QuestionCard({ question }: { question: Question }) {
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1 font-semibold">
                 <Users size={10} />
-                {formatNumber(localTotal)}
+                {formatNumber(localTotal)} votes
               </span>
               <span className="flex items-center gap-1">
                 <MessageSquare size={10} />
                 {question.totalComments}
-              </span>
-              {question.volume24h !== undefined && question.volume24h > 0 && (
-                <span className="flex items-center gap-1">
-                  <Activity size={10} />
-                  {formatNumber(question.volume24h)}
-                </span>
-              )}
-              <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                <DollarSign size={10} />
-                Earn
               </span>
             </div>
             <div className="flex items-center gap-0.5">

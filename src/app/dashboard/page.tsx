@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,8 +14,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { mockUsers, mockQuestions } from '@/lib/mock-data';
 import { formatNumber, cn } from '@/lib/utils';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 // ── Tabs ──
 const tabs = [
@@ -28,47 +28,33 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]['id'];
 
-// ── Mock data for member ──
-const walletData = {
-  address: '0x7a3B...f92E',
-  balance: 1247.50,
-  pendingEarnings: 89.25,
-  totalEarned: 3420.80,
-  totalWithdrawn: 2173.30,
-  chain: 'Base',
-  transactions: [
-    { id: 't1', type: 'earning', amount: 12.50, description: 'Question reward: AI startups', date: '2026-03-15', status: 'completed' },
-    { id: 't2', type: 'earning', amount: 8.75, description: 'Prediction win: Bitcoin price', date: '2026-03-14', status: 'completed' },
-    { id: 't3', type: 'withdrawal', amount: -50.00, description: 'Withdrawal to wallet', date: '2026-03-13', status: 'completed' },
-    { id: 't4', type: 'earning', amount: 25.00, description: 'Premium referral bonus', date: '2026-03-12', status: 'completed' },
-    { id: 't5', type: 'earning', amount: 15.00, description: 'Question reward: Remote work', date: '2026-03-11', status: 'pending' },
-    { id: 't6', type: 'withdrawal', amount: -100.00, description: 'Withdrawal to wallet', date: '2026-03-10', status: 'completed' },
-  ],
-};
+// Wallet and earnings data will come from dashData (API) or defaults
+const getWalletData = (data: any) => ({
+  address: data?.user?.walletAddress || 'Not connected',
+  balance: data?.stats?.wsrTokens || 0,
+  totalEarned: data?.user?.xp || 0,
+  chain: 'Polygon',
+  transactions: (data?.transactions || []).map((t: any) => ({
+    id: t.id,
+    type: t.type,
+    amount: t.amount,
+    description: t.description,
+    date: new Date(t.createdAt).toLocaleDateString(),
+    status: 'completed',
+  })),
+});
 
-const earningsData = {
-  today: 21.25,
-  thisWeek: 89.50,
-  thisMonth: 342.75,
-  allTime: 3420.80,
-  questionEarnings: 1890.40,
-  predictionEarnings: 1120.30,
-  referralEarnings: 410.10,
+const getEarningsData = (data: any) => ({
+  allTime: data?.user?.xp || 0,
+  wsrTokens: data?.stats?.wsrTokens || 0,
+  questionEarnings: (data?.user?.totalQuestions || 0) * 3,
+  voteEarnings: (data?.user?.totalVotes || 0) * 1,
   breakdown: [
-    { label: 'Questions', value: 1890.40, color: '#6366f1', percent: 55 },
-    { label: 'Predictions', value: 1120.30, color: '#10b981', percent: 33 },
-    { label: 'Referrals', value: 410.10, color: '#f59e0b', percent: 12 },
+    { label: 'Questions', value: (data?.user?.totalQuestions || 0) * 3, color: '#6366f1', percent: 60 },
+    { label: 'Votes', value: (data?.user?.totalVotes || 0) * 1, color: '#10b981', percent: 30 },
+    { label: 'Comments', value: (data?.stats?.myComments || 0) * 1, color: '#f59e0b', percent: 10 },
   ],
-  history: [
-    { date: 'Mar 15', amount: 21.25 },
-    { date: 'Mar 14', amount: 18.75 },
-    { date: 'Mar 13', amount: 35.50 },
-    { date: 'Mar 12', amount: 42.00 },
-    { date: 'Mar 11', amount: 28.30 },
-    { date: 'Mar 10', amount: 15.80 },
-    { date: 'Mar 09', amount: 22.40 },
-  ],
-};
+});
 
 const categories = [
   'business', 'technology', 'design', 'lifestyle', 'finance',
@@ -77,8 +63,42 @@ const categories = [
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const user = mockUsers[0];
-  const userQuestions = mockQuestions.filter(q => q.userId === user.id);
+  const { profile } = useAuth();
+  const [dashData, setDashData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/dashboard')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setDashData(data); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Use real data from API
+  const user = dashData?.user || profile || { displayName: 'User', username: 'user', xp: 0, level: 1, reputation: 0, badge: 'newcomer', totalVotes: 0, totalQuestions: 0, streak: 0, walletAddress: null };
+  const userQuestions = dashData?.myQuestions || [];
+
+  // Derive wallet and earnings from real data
+  const walletData = getWalletData(dashData);
+  const _earn = getEarningsData(dashData);
+  const earningsData = {
+    today: dashData?.stats?.myVotes || 0,
+    thisWeek: dashData?.user?.xp || 0,
+    thisMonth: dashData?.user?.xp || 0,
+    allTime: dashData?.user?.xp || 0,
+    questionEarnings: _earn.questionEarnings,
+    voteEarnings: _earn.voteEarnings,
+    wsrTokens: _earn.wsrTokens,
+    breakdown: _earn.breakdown,
+    history: (dashData?.transactions || []).slice(0, 7).map((t: any) => ({
+      date: new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      amount: t.amount,
+    })),
+  };
+  // Ensure history has at least some entries for chart
+  if (earningsData.history.length === 0) {
+    earningsData.history = [{ date: 'Today', amount: 0 }];
+  }
 
   // Create question form state
   const [formTitle, setFormTitle] = useState('');
@@ -189,7 +209,7 @@ export default function DashboardPage() {
                     <MessageSquare size={15} className="text-indigo-400" /> My Recent Questions
                   </h3>
                   <div className="space-y-2">
-                    {userQuestions.slice(0, 4).map((q) => (
+                    {userQuestions.slice(0, 4).map((q: any) => (
                       <Link key={q.id} href={`/questions/${q.id}`} className="no-underline text-inherit">
                         <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/20 hover:bg-secondary/40 transition-colors">
                           {q.image && (
@@ -237,7 +257,7 @@ export default function DashboardPage() {
                   </div>
                   {/* Breakdown */}
                   <div className="space-y-2">
-                    {earningsData.breakdown.map((b) => (
+                    {earningsData.breakdown.map((b: any) => (
                       <div key={b.label} className="flex items-center gap-3">
                         <div className="w-2 h-2 rounded-full shrink-0" style={{ background: b.color }} />
                         <span className="text-[12px] flex-1">{b.label}</span>
@@ -257,7 +277,7 @@ export default function DashboardPage() {
                   <Activity size={15} className="text-purple-400" /> Recent Transactions
                 </h3>
                 <div className="space-y-1.5">
-                  {walletData.transactions.slice(0, 4).map((tx) => (
+                  {walletData.transactions.slice(0, 4).map((tx: any) => (
                     <div key={tx.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary/20 transition-colors">
                       <div className={cn(
                         'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
@@ -294,7 +314,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {userQuestions.map((q) => (
+                {userQuestions.map((q: any) => (
                   <div key={q.id} className="bg-card/60 border border-border/30 rounded-xl overflow-hidden group">
                     {q.image && (
                       <div className="relative h-[100px] overflow-hidden">
@@ -318,7 +338,7 @@ export default function DashboardPage() {
                       </div>
                       {/* Options preview */}
                       <div className="space-y-1 mb-3">
-                        {q.options.slice(0, 2).map((opt) => (
+                        {q.options.slice(0, 2).map((opt: any) => (
                           <div key={opt.id} className="flex items-center justify-between text-[11px]">
                             <span className="flex items-center gap-1.5 truncate">
                               <span className="w-1.5 h-1.5 rounded-full" style={{ background: opt.color }} />
@@ -496,7 +516,7 @@ export default function DashboardPage() {
                     <PieChart size={15} className="text-indigo-400" /> Earnings Breakdown
                   </h3>
                   <div className="space-y-4">
-                    {earningsData.breakdown.map((b) => (
+                    {earningsData.breakdown.map((b: any) => (
                       <div key={b.label}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[12px] font-medium flex items-center gap-2">
@@ -526,8 +546,8 @@ export default function DashboardPage() {
                     <BarChart3 size={15} className="text-emerald-400" /> Daily Earnings (Last 7 Days)
                   </h3>
                   <div className="space-y-2">
-                    {earningsData.history.map((day) => {
-                      const maxAmount = Math.max(...earningsData.history.map(d => d.amount));
+                    {earningsData.history.map((day: any) => {
+                      const maxAmount = Math.max(...earningsData.history.map((d: any) => d.amount));
                       const pct = (day.amount / maxAmount) * 100;
                       return (
                         <div key={day.date} className="flex items-center gap-3">
@@ -554,7 +574,7 @@ export default function DashboardPage() {
                   <Award size={15} className="text-amber-400" /> Top Earning Questions
                 </h3>
                 <div className="space-y-2">
-                  {userQuestions.map((q, i) => (
+                  {userQuestions.map((q: any, i: number) => (
                     <div key={q.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors">
                       <span className="text-[14px] font-black text-muted-foreground w-6 text-center">#{i + 1}</span>
                       {q.image && <img src={q.image} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
@@ -602,7 +622,7 @@ export default function DashboardPage() {
                   <p className="text-[11px] text-muted-foreground mb-1">Available Balance</p>
                   <p className="text-4xl font-black text-white">${walletData.balance.toLocaleString()}</p>
                   <p className="text-[12px] text-amber-400 mt-1 flex items-center gap-1">
-                    <Clock size={11} /> Pending: ${walletData.pendingEarnings}
+                    <Clock size={11} /> Pending: ${0}
                   </p>
                 </div>
 
@@ -620,8 +640,8 @@ export default function DashboardPage() {
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: 'Total Earned', value: `$${walletData.totalEarned.toLocaleString()}`, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Total Withdrawn', value: `$${walletData.totalWithdrawn.toLocaleString()}`, icon: ArrowDownRight, color: 'text-red-400', bg: 'bg-red-500/10' },
-                  { label: 'Pending', value: `$${walletData.pendingEarnings}`, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Total Withdrawn', value: `$${0}`, icon: ArrowDownRight, color: 'text-red-400', bg: 'bg-red-500/10' },
+                  { label: 'Pending', value: `$${0}`, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}>
@@ -639,7 +659,7 @@ export default function DashboardPage() {
                   <Activity size={15} className="text-purple-400" /> Transaction History
                 </h3>
                 <div className="space-y-1.5">
-                  {walletData.transactions.map((tx) => (
+                  {walletData.transactions.map((tx: any) => (
                     <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/20 transition-colors border border-transparent hover:border-border/20">
                       <div className={cn(
                         'w-9 h-9 rounded-lg flex items-center justify-center shrink-0',

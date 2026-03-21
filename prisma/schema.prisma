@@ -1,0 +1,341 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════ AUTH & USERS ═══════════
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  displayName   String?
+  username      String?  @unique
+  avatarUrl     String?
+  bio           String?
+  role          String   @default("user") // user, admin, moderator
+
+  // Gamification
+  reputation    Int      @default(0)
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  badge         String   @default("newcomer")
+
+  // Stats
+  totalVotes       Int @default(0)
+  totalQuestions   Int @default(0)
+  totalPredictions Int @default(0)
+  predictionAccuracy Float @default(0)
+  streak           Int @default(0)
+  lastActiveAt     DateTime?
+
+  // Email verification
+  emailVerified     Boolean  @default(false)
+  verificationCode  String?
+  verificationExpiry DateTime?
+
+  // Wallet
+  walletAddress  String? @unique
+  walletChain    String? @default("polygon")
+  walletVerified Boolean @default(false)
+
+  // Token economy
+  unclaimedWSR    Float @default(0)  // XP converted to WSR, pending on-chain claim
+  totalClaimedWSR Float @default(0)  // Total WSR successfully sent on-chain
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  questions       Question[]
+  votes           Vote[]
+  comments        Comment[]
+  commentLikes    CommentLike[]
+  predictions     PredictionParticipation[]
+  posts           Post[]
+  postLikes       PostLike[]
+  bookmarks       Bookmark[]
+  notifications   Notification[]
+  achievements    UserAchievement[]
+  tokenTxs        TokenTransaction[]
+  followers       Follow[] @relation("following")
+  following       Follow[] @relation("follower")
+  sessions        Session[]
+
+  @@index([reputation])
+  @@index([walletAddress])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ═══════════ QUESTIONS & VOTING ═══════════
+
+model Question {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  category    String   @default("other")
+  status      String   @default("active") // active, closed, trending, sponsored
+  visibility  String   @default("public") // public, premium
+  imageUrl    String?
+  tags        String[] @default([])
+  totalVotes  Int      @default(0)
+  totalComments Int    @default(0)
+  changePercent Float  @default(0)
+  expiresAt   DateTime?
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options   QuestionOption[]
+  votes     Vote[]
+  comments  Comment[]
+  bookmarks Bookmark[]
+  posts     Post[]
+
+  @@index([category])
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model QuestionOption {
+  id         String @id @default(uuid())
+  questionId String
+  label      String
+  voteCount  Int    @default(0)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  votes    Vote[]
+
+  @@index([questionId])
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  userId     String
+  questionId String
+  optionId   String
+  createdAt  DateTime @default(now())
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   QuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([questionId])
+  @@index([userId])
+}
+
+// ═══════════ COMMENTS ═══════════
+
+model Comment {
+  id         String   @id @default(uuid())
+  text       String
+  userId     String
+  questionId String
+  parentId   String?  // nested comments
+  likesCount Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  parent   Comment?      @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  Comment[]     @relation("CommentReplies")
+  likes    CommentLike[]
+
+  @@index([questionId])
+}
+
+model CommentLike {
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+}
+
+// ═══════════ PREDICTIONS ═══════════
+
+model Prediction {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  category    String   @default("other")
+  status      String   @default("open") // open, closed, resolved
+  targetDate  DateTime?
+  resolvedOutcome String?
+  totalPool   Float    @default(0)
+
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  options        PredictionOption[]
+  participations PredictionParticipation[]
+
+  @@index([status])
+}
+
+model PredictionOption {
+  id           String @id @default(uuid())
+  predictionId String
+  label        String
+  odds         Float  @default(1.0)
+  totalStaked  Float  @default(0)
+
+  prediction     Prediction                @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  participations PredictionParticipation[]
+}
+
+model PredictionParticipation {
+  id           String   @id @default(uuid())
+  userId       String
+  predictionId String
+  optionId     String
+  amount       Float    @default(0)
+  payout       Float?
+  status       String   @default("pending") // pending, won, lost
+  createdAt    DateTime @default(now())
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prediction Prediction       @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  option     PredictionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, predictionId])
+}
+
+// ═══════════ SOCIAL FEED ═══════════
+
+model Post {
+  id            String   @id @default(uuid())
+  userId        String
+  content       String?
+  imageUrl      String?
+  postType      String   @default("text") // text, poll, image_poll, prediction
+  questionId    String?
+  likesCount    Int      @default(0)
+  commentsCount Int      @default(0)
+  sharesCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question?  @relation(fields: [questionId], references: [id])
+  likes    PostLike[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model PostLike {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+// ═══════════ SOCIAL: FOLLOWS ═══════════
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+}
+
+// ═══════════ TOKEN & EARN ═══════════
+
+model TokenTransaction {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // earn, stake, win, transfer, daily_bonus, referral, claim
+  amount      Float
+  description String?
+  txHash      String?
+  status      String   @default("completed") // completed, pending, failed
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+// ═══════════ BOOKMARKS & NOTIFICATIONS ═══════════
+
+model Bookmark {
+  userId     String
+  questionId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // vote, comment, prediction, achievement, system
+  title     String
+  message   String?
+  read      Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ═══════════ ACHIEVEMENTS ═══════════
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+}
+
+// ═══════════ HASHTAGS ═══════════
+
+model Hashtag {
+  id         String @id @default(uuid())
+  tag        String @unique
+  usageCount Int    @default(0)
+}

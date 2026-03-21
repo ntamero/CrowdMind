@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+token-deploy/node_modules/
+token-deploy/artifacts/
+token-deploy/cache/

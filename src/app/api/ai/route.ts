@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeWithAI } from '@/lib/ai-providers';
+import { getOpenFangAnalysis } from '@/lib/openfang';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,15 +14,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const analysis = await analyzeWithAI({
-      questionTitle,
-      options,
-      totalVotes,
-      category,
-      tags,
-    });
+    // Run MIA (Groq) and OpenFang analysis in parallel
+    const [miaAnalysis, openfangComment] = await Promise.all([
+      analyzeWithAI({ questionTitle, options, totalVotes, category, tags }),
+      getOpenFangAnalysis(
+        questionTitle,
+        options.map((o: any) => o.text || o),
+        category || 'general',
+        totalVotes,
+      ).catch(() => null),
+    ]);
 
-    return NextResponse.json(analysis);
+    return NextResponse.json({
+      ...miaAnalysis,
+      openfangInsight: openfangComment || undefined,
+    });
   } catch (error) {
     console.error('[API /ai] Error:', error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getComments, createComment } from '@/lib/database';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,9 +16,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const userId = body.userId || 'anonymous';
-    const comment = await createComment(userId, body.questionId, body.text);
+    const comment = await createComment(user.id, body.questionId, body.text);
     return NextResponse.json(comment, { status: 201 });
   } catch (error) {
     console.error('[API /comments POST]', error);

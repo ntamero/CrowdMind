@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Zap, Trophy, Users, Clock, TrendingUp, TrendingDown,
@@ -55,11 +55,43 @@ const cardVariant = {
 export default function PredictionsPage() {
   const [filter, setFilter] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [dbQuestions, setDbQuestions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/questions?sort=trending&limit=20')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.questions?.length > 0) {
+          // Convert questions to prediction format
+          setDbQuestions(data.questions.map((q: any) => ({
+            id: q.id,
+            title: q.title,
+            category: q.category || 'other',
+            targetDate: q.expiresAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            options: (q.options || []).map((o: any) => ({
+              id: o.id,
+              text: o.text,
+              odds: q.totalVotes > 0 ? Math.round((o.votes / q.totalVotes) * 100) : Math.round(100 / (q.options?.length || 2)),
+              participants: o.votes || 0,
+            })),
+            totalParticipants: q.totalVotes || 0,
+            status: q.status === 'closed' ? 'resolved' : 'open',
+            prize: `${q.totalVotes * 1} XP Pool`,
+            volume24h: q.totalVotes * 100,
+            trendData: [30, 45, 55, 40, 60, 50, 70],
+            changePercent: Math.random() * 10 - 3,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const predictions = dbQuestions.length > 0 ? dbQuestions : mockPredictions;
 
   const filtered =
     filter === 'all'
-      ? mockPredictions
-      : mockPredictions.filter((p) => p.category === filter);
+      ? predictions
+      : predictions.filter((p: any) => p.category === filter);
 
   return (
     <div className="max-w-full mx-auto py-4">
@@ -255,7 +287,7 @@ export default function PredictionsPage() {
 
                   {/* ── Options (compact) ── */}
                   <div className="space-y-1.5 mb-3">
-                    {prediction.options.slice(0, 3).map((option) => {
+                    {prediction.options.slice(0, 3).map((option: any) => {
                       const totalP = prediction.totalParticipants || 1;
                       const pct = Math.round((option.participants / totalP) * 100);
                       const isLeading = option.id === leadingOption.id;

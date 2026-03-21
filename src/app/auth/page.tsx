@@ -18,6 +18,8 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [verifyMode, setVerifyMode] = useState(false);
+  const [verifyCode, setVerifyCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,24 +27,106 @@ export default function AuthPage() {
     setError(null);
 
     if (mode === 'login') {
-      const { error } = await signInWithEmail(form.email, form.password);
-      if (error) {
-        setError(error);
+      const result = await signInWithEmail(form.email, form.password);
+      if ((result as any).requiresVerification) {
+        setVerifyMode(true);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      if (result.error) {
+        setError(result.error);
         setLoading(false);
         return;
       }
     } else {
-      const { error } = await signUpWithEmail(form.email, form.password, form.name);
-      if (error) {
-        setError(error);
+      const result = await signUpWithEmail(form.email, form.password, form.name);
+      if (result.error) {
+        setError(result.error);
         setLoading(false);
         return;
       }
+      setVerifyMode(true);
+      setLoading(false);
+      return;
     }
 
     router.push('/');
   };
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, code: verifyCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Verification failed');
+        setLoading(false);
+        return;
+      }
+      router.push('/');
+    } catch {
+      setError('Network error');
+      setLoading(false);
+    }
+  };
+
+  // ─── Verify Mode ─────────────────────
+  if (verifyMode) {
+    return (
+      <div className="flex min-h-[calc(100vh-70px)] items-center justify-center p-5">
+        <div className="w-[440px] max-w-full">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[18px] bg-gradient-to-br from-amber-500 to-orange-600">
+              <Lock size={32} className="text-white" />
+            </div>
+            <h1 className="mb-1.5 text-[28px] font-extrabold text-foreground">Verify Your Email</h1>
+            <p className="text-sm text-muted-foreground">
+              We sent a 6-digit code to <span className="text-amber-400 font-semibold">{form.email}</span>
+            </p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-border/30 bg-card/50 p-8">
+            {error && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+                <AlertCircle size={16} /> {error}
+              </div>
+            )}
+
+            <form onSubmit={handleVerify} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-muted-foreground">Verification Code</label>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={verifyCode}
+                  onChange={(e) => setVerifyCode(e.target.value)}
+                  maxLength={6}
+                  className="h-12 text-center text-2xl tracking-[8px] font-bold bg-secondary/50 border-border/50"
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={loading || verifyCode.length !== 6} className="w-full h-11 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold">
+                {loading ? 'Verifying...' : 'Verify Email'}
+              </Button>
+            </form>
+
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Check your inbox and spam folder. Code expires in 15 minutes.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Login / Register Mode ─────────────────────
   return (
     <div className="flex min-h-[calc(100vh-70px)] items-center justify-center p-5">
       <div className="w-[440px] max-w-full">
@@ -53,16 +137,16 @@ export default function AuthPage() {
           transition={{ duration: 0.4 }}
           className="mb-8 text-center"
         >
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[18px] bg-gradient-to-br from-indigo-500 to-purple-600">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[18px] bg-gradient-to-br from-amber-500 to-orange-600">
             <Brain size={32} className="text-white" />
           </div>
           <h1 className="mb-1.5 text-[28px] font-extrabold text-foreground">
-            {mode === 'login' ? 'Welcome back' : 'Join CrowdMind'}
+            {mode === 'login' ? 'Welcome back' : 'Join Wisery'}
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === 'login'
-              ? 'Sign in to continue making smarter decisions'
-              : 'Start making decisions with collective intelligence'}
+              ? 'Sign in to continue. Ask. Vote. Earn.'
+              : 'Start earning with the wisdom of the crowd'}
           </p>
         </motion.div>
 

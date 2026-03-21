@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { mockQuestions, mockComments } from '@/lib/mock-data';
 import { cn, formatNumber, timeAgo } from '@/lib/utils';
+import { useAuth } from '@/lib/supabase/auth-context';
 import ShareModal from '@/components/shared/ShareModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ const staggerContainer = {
 
 export default function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { refreshProfile } = useAuth();
   const [question, setQuestion] = useState<Question | null>(null);
   const [voted, setVoted] = useState<string | null>(null);
   const [showAI, setShowAI] = useState(false);
@@ -35,14 +37,36 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
   const [bookmarked, setBookmarked] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(true);
+  const [voteMessage, setVoteMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const q = mockQuestions.find((q) => q.id === id);
-    if (q) {
-      setQuestion(q);
-      setComments(mockComments.filter((c) => c.questionId === id));
+    async function fetchQuestion() {
+      try {
+        // Try API first (real DB)
+        const res = await fetch(`/api/questions/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setQuestion(data);
+            // Fetch comments
+            const commRes = await fetch(`/api/comments?questionId=${id}`);
+            if (commRes.ok) {
+              const commData = await commRes.json();
+              setComments(commData.comments || []);
+            }
+            return;
+          }
+        }
+      } catch {}
+      // Fallback to mock
+      const q = mockQuestions.find((q) => q.id === id);
+      if (q) {
+        setQuestion(q);
+        setComments(mockComments.filter((c) => c.questionId === id));
+      }
     }
+    fetchQuestion();
   }, [id]);
 
   if (!question) {
@@ -53,9 +77,11 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const handleVote = (optionId: string) => {
+  const handleVote = async (optionId: string) => {
     if (voted) return;
     setVoted(optionId);
+    setVoteMessage(null);
+    // Optimistic update
     setQuestion((prev) => {
       if (!prev) return prev;
       const newTotal = prev.totalVotes + 1;
@@ -68,6 +94,44 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
         }),
       };
     });
+    // Send to API
+    try {
+      const res = await fetch('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId: id, optionId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        if (data.error === 'Already voted') {
+          setVoteMessage('You already voted on this question!');
+        } else if (res.status === 401) {
+          setVoteMessage('Please sign in to vote.');
+        } else {
+          setVoteMessage(data.error || 'Vote failed');
+        }
+        setVoted(null);
+        // Revert optimistic update
+        setQuestion((prev) => {
+          if (!prev) return prev;
+          const newTotal = prev.totalVotes - 1;
+          return {
+            ...prev,
+            totalVotes: newTotal,
+            options: prev.options.map((opt) => {
+              const newVotes = opt.id === optionId ? opt.votes - 1 : opt.votes;
+              return { ...opt, votes: newVotes, percentage: newTotal > 0 ? Math.round((newVotes / newTotal) * 100) : 0 };
+            }),
+          };
+        });
+        return;
+      }
+      setVoteMessage('Vote recorded! +1 XP earned');
+      refreshProfile(); // Update XP in navbar/profile
+    } catch {
+      setVoted(null);
+      setVoteMessage('Network error');
+    }
     setTimeout(() => setShowAI(true), 800);
   };
 
@@ -193,6 +257,22 @@ export default function QuestionDetailPage({ params }: { params: Promise<{ id: s
             );
           })}
         </motion.div>
+
+        {/* Vote Message */}
+        {voteMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              'mb-4 rounded-lg border p-3 text-sm font-semibold text-center',
+              voteMessage.includes('XP')
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-red-500/10 border-red-500/20 text-red-400'
+            )}
+          >
+            {voteMessage}
+          </motion.div>
+        )}
 
         {/* Action buttons */}
         <div className="flex gap-2.5">

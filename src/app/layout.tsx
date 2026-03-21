@@ -4,6 +4,9 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { AuthProvider } from "@/lib/supabase/auth-context";
+import { WalletProvider } from "@/context/WalletContext";
+import Footer from "@/components/layout/Footer";
+import VisitorTracker from "@/components/shared/VisitorTracker";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -11,9 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CrowdMind AI — Collective Intelligence Platform",
+  title: "Wisery — Ask. Vote. Earn.",
   description:
-    "Ask the world. Get AI-powered insights. Make better decisions with collective intelligence.",
+    "Topluluk zekası platformu. Soru sor, oyla, tahmin yap, token kazan. AI destekli analizlerle daha iyi kararlar ver.",
 };
 
 export default function RootLayout({
@@ -25,11 +28,17 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased`}>
         <AuthProvider>
-          <Navbar />
-          <Sidebar />
-          <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] px-3 py-4 lg:px-5 lg:py-5 relative z-[1]">
-            {children}
-          </main>
+          <WalletProvider>
+            <Navbar />
+            <Sidebar />
+            <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] px-3 py-4 lg:px-5 lg:py-5 relative z-[1]">
+              {children}
+            </main>
+            <div className="ml-0 lg:ml-[240px]">
+              <Footer />
+            </div>
+            <VisitorTracker />
+          </WalletProvider>
         </AuthProvider>
       </body>
     </html>
