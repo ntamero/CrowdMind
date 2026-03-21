@@ -90,6 +90,8 @@ npx next build && pm2 restart wisery
 | WSR Token | ERC-20 on Polygon Amoy, 1B supply |
 | XP → WSR Conversion | 250 XP = 1 WSR, 10 XP fee, 1hr cooldown |
 | WSR → XP Conversion | 1 WSR = 240 XP (250 - 10 fee) |
+| On-chain WSR Deposit | MetaMask → Site: send WSR to pool wallet, backend verifies tx, credits unclaimedWSR |
+| On-chain WSR Withdrawal | Site → MetaMask: backend sends WSR from deployer wallet to user's wallet on Polygon Amoy |
 | Pool Wallet | Fee collection (0.04 WSR per conversion), admin visible |
 | Admin Panel (Real Data) | Overview, Users, Questions, Categories, Earnings, Wallets, Transactions, Timers |
 | Dashboard | Overview stats, my questions, create question, earnings, wallet tab |
@@ -112,10 +114,12 @@ src/app/wallet/page.tsx          — XP↔WSR conversion UI (two-way)
 src/app/dashboard/page.tsx       — User dashboard (XP/WSR units)
 src/app/admin/page.tsx           — Admin panel (real DB data)
 src/app/earn/page.tsx            — Earning methods & daily tasks
-src/app/api/wallet/claim/route.ts   — XP → WSR API
-src/app/api/wallet/deposit/route.ts — WSR → XP API
-src/app/api/wallet/balance/route.ts — On-chain balance check
-src/app/api/wallet/connect/route.ts — MetaMask SIWE connection
+src/app/api/wallet/claim/route.ts           — XP → WSR conversion API
+src/app/api/wallet/deposit/route.ts         — WSR → XP conversion API (internal)
+src/app/api/wallet/onchain-deposit/route.ts — MetaMask → Site WSR deposit (verifies on-chain tx)
+src/app/api/wallet/withdraw/route.ts        — Site → MetaMask WSR withdrawal (sends on-chain)
+src/app/api/wallet/balance/route.ts         — On-chain balance check
+src/app/api/wallet/connect/route.ts         — MetaMask SIWE connection
 src/app/api/admin/stats/route.ts    — Admin dashboard data
 src/app/api/admin/pool/route.ts     — Pool wallet data
 src/context/WalletContext.tsx    — MetaMask state provider
@@ -140,13 +144,14 @@ token-deploy/                    — Hardhat deployment
 | Create questions | ✅ | ✅ |
 | Earn XP | ✅ | ✅ |
 | Convert XP ↔ WSR | ✅ | ✅ |
-| Withdraw WSR on-chain | ❌ | ✅ |
+| Deposit WSR from MetaMask | ❌ | ✅ |
+| Withdraw WSR to MetaMask | ❌ | ✅ |
 
 ---
 
 ## Pending / Next Steps
-- [ ] On-chain WSR deposit: Transfer WSR from MetaMask → site (credit XP)
-- [ ] Admin WSR withdrawal: Transfer pool WSR to admin MetaMask
+- [x] On-chain WSR deposit: Transfer WSR from MetaMask → site (credit unclaimedWSR)
+- [x] On-chain WSR withdrawal: Transfer WSR from site → MetaMask (on-chain transfer)
 - [ ] Deploy v2 contract (Pausable, daily limits, batch rewards)
 - [ ] Cron job: auto-distribute pending WSR claims on-chain
 - [ ] Real-time voting (WebSocket/Supabase Realtime)
