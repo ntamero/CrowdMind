@@ -69,6 +69,7 @@ model User {
   followers       Follow[] @relation("following")
   following       Follow[] @relation("follower")
   sessions        Session[]
+  pageViews       PageView[] @relation("pageViews")
 
   @@index([reputation])
   @@index([walletAddress])
@@ -371,4 +372,31 @@ model Hashtag {
   id         String @id @default(uuid())
   tag        String @unique
   usageCount Int    @default(0)
+}
+
+// ═══════════ VISITOR & PAGE VIEW TRACKING ═══════════
+
+model PageView {
+  id          String   @id @default(uuid())
+  fingerprint String   // browser fingerprint (IP + UA hash)
+  userId      String?  // logged-in user ID (nullable for guests)
+  path        String   // page path e.g. /feed, /questions/abc
+  referrer    String?  // where they came from
+  userAgent   String?  // full user-agent
+  device      String?  // mobile, desktop, tablet
+  browser     String?  // Chrome, Firefox, Safari
+  os          String?  // Windows, macOS, Android, iOS
+  country     String?  // country code from IP (if available)
+  city        String?  // city from IP
+  sessionId   String?  // group page views into sessions
+  duration    Int?     // time on page in seconds
+  createdAt   DateTime @default(now())
+
+  user User? @relation("pageViews", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([fingerprint])
+  @@index([userId])
+  @@index([path])
+  @@index([createdAt])
+  @@index([sessionId])
 }

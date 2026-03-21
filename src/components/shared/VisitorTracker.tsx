@@ -1,24 +1,62 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { Eye } from 'lucide-react';
+
+// Generate a session ID that persists for the browser tab
+function getSessionId() {
+  if (typeof window === 'undefined') return '';
+  let sid = sessionStorage.getItem('ws_sid');
+  if (!sid) {
+    sid = `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    sessionStorage.setItem('ws_sid', sid);
+  }
+  return sid;
+}
 
 export default function VisitorTracker() {
   const [online, setOnline] = useState(0);
+  const pathname = usePathname();
+  const lastPingPath = useRef('');
+  const pageStart = useRef(Date.now());
 
   useEffect(() => {
-    // Ping on mount
-    const ping = () => {
-      fetch('/api/visitors', { method: 'POST' })
+    const sessionId = getSessionId();
+
+    const ping = (path: string, duration?: number) => {
+      fetch('/api/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path,
+          referrer: document.referrer || null,
+          sessionId,
+          duration: duration || null,
+        }),
+      })
         .then(r => r.json())
         .then(d => setOnline(d.online))
         .catch(() => {});
     };
 
-    ping();
-    const interval = setInterval(ping, 30000); // every 30s
+    // Send duration for previous page
+    if (lastPingPath.current && lastPingPath.current !== pathname) {
+      const duration = Math.round((Date.now() - pageStart.current) / 1000);
+      if (duration > 0 && duration < 3600) {
+        ping(lastPingPath.current, duration);
+      }
+    }
+
+    // Track new page
+    pageStart.current = Date.now();
+    lastPingPath.current = pathname;
+    ping(pathname);
+
+    // Keep-alive ping every 30s
+    const interval = setInterval(() => ping(pathname), 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [pathname]);
 
   if (online === 0) return null;
 

@@ -13,6 +13,7 @@ import {
   ArrowRightLeft, Award, Hash, Mail, UserCheck,
   Filter, Download, MoreHorizontal, Star,
   TrendingDown, Percent, Calendar, Database,
+  Monitor, Smartphone, Tablet, MapPin,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -37,6 +38,7 @@ const adminTabs = [
   { id: 'wallets', label: 'Wallets', icon: Wallet },
   { id: 'transactions', label: 'Transactions', icon: Activity },
   { id: 'timers', label: 'Timers', icon: Timer },
+  { id: 'visitors', label: 'Visitors', icon: Eye },
 ] as const;
 
 type AdminTab = (typeof adminTabs)[number]['id'];
@@ -117,6 +119,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [txFilter, setTxFilter] = useState<string>('all');
+  const [visitorData, setVisitorData] = useState<any>(null);
   const [userSort, setUserSort] = useState<string>('recent');
   const [questionFilter, setQuestionFilter] = useState<string>('all');
 
@@ -133,6 +136,15 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Fetch visitor data when visitors tab is active
+  useEffect(() => {
+    if (activeTab !== 'visitors') return;
+    fetch('/api/admin/visitors')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setVisitorData(d))
+      .catch(() => {});
+  }, [activeTab]);
 
   const o = data?.overview;
   const a = data?.analytics;
@@ -1082,6 +1094,231 @@ export default function AdminPage() {
                     </div>
                   ))}
               </div>
+            </div>
+          )}
+
+          {/* ═══════ VISITORS ═══════ */}
+          {activeTab === 'visitors' && (
+            <div className="space-y-5">
+              {!visitorData ? (
+                <div className="flex items-center justify-center py-20">
+                  <RefreshCw size={20} className="animate-spin text-muted-foreground mr-2" />
+                  <span className="text-muted-foreground">Loading visitor data...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <StatCard icon={Eye} label="Total Page Views" value={visitorData.overview.totalPageViews} color="#6366f1" />
+                    <StatCard icon={BarChart3} label="Today Views" value={visitorData.overview.todayViews} sub={`Yesterday: ${visitorData.overview.yesterdayViews}`} color="#10b981" trend={visitorData.overview.todayViews >= visitorData.overview.yesterdayViews ? 'up' : 'down'} />
+                    <StatCard icon={Users} label="Unique Today" value={visitorData.overview.uniqueVisitorsToday} sub={`Week: ${visitorData.overview.uniqueVisitorsWeek}`} color="#f59e0b" />
+                    <StatCard icon={Globe} label="Active Sessions" value={visitorData.overview.activeSessions} color="#ef4444" />
+                    <StatCard icon={UserCheck} label="Logged In" value={visitorData.overview.loggedInViewsToday} sub={`Guests: ${visitorData.overview.guestViewsToday}`} color="#8b5cf6" />
+                    <StatCard icon={Clock} label="Avg Duration" value={`${visitorData.overview.avgDuration}s`} color="#06b6d4" />
+                  </div>
+
+                  {/* Traffic Chart */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2 bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <TrendingUp size={15} className="text-indigo-400" /> 14-Day Traffic
+                      </h3>
+                      <div className="h-[250px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={visitorData.chartData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#6b7094' }} />
+                            <YAxis tick={{ fontSize: 10, fill: '#6b7094' }} />
+                            <Tooltip content={<ChartTooltip />} />
+                            <Legend wrapperStyle={{ fontSize: 10 }} />
+                            <Area type="monotone" dataKey="views" name="Page Views" stroke="#6366f1" fill="#6366f120" strokeWidth={2} />
+                            <Area type="monotone" dataKey="unique" name="Unique Visitors" stroke="#10b981" fill="#10b98120" strokeWidth={2} />
+                            <Area type="monotone" dataKey="loggedIn" name="Logged In" stroke="#f59e0b" fill="#f59e0b20" strokeWidth={2} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Top Pages */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <Target size={15} className="text-amber-400" /> Top Pages (7d)
+                      </h3>
+                      <div className="space-y-2 max-h-[250px] overflow-y-auto">
+                        {(visitorData.topPages || []).map((p: any, i: number) => {
+                          const maxViews = visitorData.topPages[0]?.views || 1;
+                          return (
+                            <div key={p.path} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-mono truncate flex-1">{p.path}</span>
+                                <span className="text-[11px] font-bold text-indigo-400 ml-2">{p.views}</span>
+                              </div>
+                              <div className="h-1 bg-secondary/30 rounded-full overflow-hidden">
+                                <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(p.views / maxViews) * 100}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Device / Browser / OS Breakdown */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Device */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <Monitor size={15} className="text-emerald-400" /> Devices (7d)
+                      </h3>
+                      <div className="h-[180px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsPie>
+                            <Pie data={visitorData.deviceBreakdown} dataKey="count" nameKey="device" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={3}>
+                              {(visitorData.deviceBreakdown || []).map((_: any, i: number) => (
+                                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<ChartTooltip />} />
+                          </RechartsPie>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {(visitorData.deviceBreakdown || []).map((d: any, i: number) => {
+                          const Icon = d.device === 'mobile' ? Smartphone : d.device === 'tablet' ? Tablet : Monitor;
+                          return (
+                            <div key={d.device} className="flex items-center gap-1">
+                              <Icon size={10} style={{ color: PIE_COLORS[i % PIE_COLORS.length] }} />
+                              <span className="text-[9px] text-muted-foreground capitalize">{d.device} ({d.count})</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Browser */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <Globe size={15} className="text-blue-400" /> Browsers (7d)
+                      </h3>
+                      <div className="space-y-2">
+                        {(visitorData.browserBreakdown || []).map((b: any, i: number) => {
+                          const maxCount = visitorData.browserBreakdown[0]?.count || 1;
+                          return (
+                            <div key={b.browser} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px]">{b.browser}</span>
+                                <span className="text-[11px] font-bold" style={{ color: PIE_COLORS[i % PIE_COLORS.length] }}>{b.count}</span>
+                              </div>
+                              <div className="h-1.5 bg-secondary/30 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${(b.count / maxCount) * 100}%`, background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* OS */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <Database size={15} className="text-purple-400" /> Operating Systems (7d)
+                      </h3>
+                      <div className="space-y-2">
+                        {(visitorData.osBreakdown || []).map((o: any, i: number) => {
+                          const maxCount = visitorData.osBreakdown[0]?.count || 1;
+                          return (
+                            <div key={o.os} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px]">{o.os}</span>
+                                <span className="text-[11px] font-bold" style={{ color: PIE_COLORS[i % PIE_COLORS.length] }}>{o.count}</span>
+                              </div>
+                              <div className="h-1.5 bg-secondary/30 rounded-full overflow-hidden">
+                                <div className="h-full rounded-full" style={{ width: `${(o.count / maxCount) * 100}%`, background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Referrers + Countries */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Top Referrers */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <ExternalLink size={15} className="text-cyan-400" /> Top Referrers (7d)
+                      </h3>
+                      <div className="space-y-2">
+                        {(visitorData.topReferrers || []).length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">No referrer data yet</p>
+                        )}
+                        {(visitorData.topReferrers || []).map((r: any) => (
+                          <div key={r.referrer} className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                            <span className="text-[11px] font-mono truncate flex-1">{r.referrer}</span>
+                            <Badge className="text-[9px] bg-cyan-500/10 text-cyan-400 border-0 ml-2">{r.count}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Countries */}
+                    <div className="bg-card/60 border border-border/30 rounded-xl p-5">
+                      <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
+                        <MapPin size={15} className="text-red-400" /> Countries (7d)
+                      </h3>
+                      <div className="space-y-2">
+                        {(visitorData.countryBreakdown || []).length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">No country data yet</p>
+                        )}
+                        {(visitorData.countryBreakdown || []).map((c: any, i: number) => (
+                          <div key={c.country} className="flex items-center justify-between p-2 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                            <span className="text-[11px]">{c.country}</span>
+                            <Badge className="text-[9px] bg-red-500/10 text-red-400 border-0">{c.count}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Page Views */}
+                  <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
+                    <h3 className="text-sm font-bold flex items-center gap-2 px-4 py-3 border-b border-border/20">
+                      <Activity size={15} className="text-indigo-400" /> Live Page Views ({visitorData.recentViews?.length || 0})
+                    </h3>
+                    <div className="grid grid-cols-[1fr_120px_70px_70px_60px_60px_80px] gap-2 px-4 py-2 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      <span>User / Visitor</span><span>Page</span><span>Device</span><span>Browser</span><span>OS</span><span>Duration</span><span>Time</span>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      {(visitorData.recentViews || []).map((v: any) => (
+                        <div key={v.id} className="grid grid-cols-[1fr_120px_70px_70px_60px_60px_80px] gap-2 px-4 py-2 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0',
+                              v.user ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-slate-500 to-slate-600'
+                            )}>
+                              {v.user ? (v.user.displayName || v.user.username || '?').charAt(0).toUpperCase() : 'G'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-semibold truncate">{v.user ? (v.user.displayName || v.user.username) : 'Guest'}</p>
+                              <p className="text-[9px] text-muted-foreground truncate font-mono">{v.fingerprint.slice(0, 20)}...</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono truncate">{v.path}</span>
+                          <Badge className={cn('text-[8px] border-0 w-fit capitalize',
+                            v.device === 'mobile' ? 'bg-amber-500/10 text-amber-400' :
+                            v.device === 'tablet' ? 'bg-purple-500/10 text-purple-400' :
+                            'bg-emerald-500/10 text-emerald-400'
+                          )}>{v.device || '—'}</Badge>
+                          <span className="text-[10px] text-muted-foreground">{v.browser || '—'}</span>
+                          <span className="text-[10px] text-muted-foreground">{v.os || '—'}</span>
+                          <span className="text-[10px] text-muted-foreground">{v.duration ? `${v.duration}s` : '—'}</span>
+                          <span className="text-[10px] text-muted-foreground">{timeAgo(v.createdAt)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
