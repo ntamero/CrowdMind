@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/supabase/auth-context";
 import { WalletProvider } from "@/context/WalletContext";
 import Footer from "@/components/layout/Footer";
 import VisitorTracker from "@/components/shared/VisitorTracker";
+import { ThemeProvider } from "next-themes";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -25,21 +26,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
-        <AuthProvider>
-          <WalletProvider>
-            <Navbar />
-            <Sidebar />
-            <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] px-3 py-4 lg:px-5 lg:py-5 relative z-[1]">
-              {children}
-            </main>
-            <div className="ml-0 lg:ml-[240px]">
-              <Footer />
-            </div>
-            <VisitorTracker />
-          </WalletProvider>
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <AuthProvider>
+            <WalletProvider>
+              <Navbar />
+              <Sidebar />
+              <main className="mt-14 ml-0 lg:ml-[240px] min-h-[calc(100vh-56px)] px-3 py-4 lg:px-5 lg:py-5 relative z-[1]">
+                {children}
+              </main>
+              <div className="ml-0 lg:ml-[240px]">
+                <Footer />
+              </div>
+              <VisitorTracker />
+            </WalletProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
