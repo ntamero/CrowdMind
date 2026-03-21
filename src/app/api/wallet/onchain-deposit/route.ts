@@ -52,12 +52,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transaction already processed' }, { status: 400 });
     }
 
-    // Verify transaction on-chain
+    // Verify transaction on-chain (retry up to 5 times for slow RPC)
     const provider = new JsonRpcProvider(RPC_URL);
-    const receipt = await provider.getTransactionReceipt(txHash);
+    let receipt = await provider.getTransactionReceipt(txHash);
 
     if (!receipt) {
-      return NextResponse.json({ error: 'Transaction not found on chain. Wait for confirmation and try again.' }, { status: 400 });
+      // Wait and retry - Polygon Amoy can be slow
+      for (let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 3000));
+        receipt = await provider.getTransactionReceipt(txHash);
+        if (receipt) break;
+      }
+    }
+
+    if (!receipt) {
+      return NextResponse.json({ error: 'Transaction not confirmed yet. Please wait a moment and try again.' }, { status: 400 });
     }
 
     if (receipt.status !== 1) {

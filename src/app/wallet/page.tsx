@@ -142,10 +142,12 @@ export default function WalletPage() {
     setOnchainDepositing(true);
     setMessage(null);
     try {
-      // Step 1: Send WSR from MetaMask to pool wallet via ERC-20 transfer
+      // Step 1: Send WSR from connected MetaMask wallet to platform
+      setMessage({ type: 'success', text: 'Confirm the transaction in MetaMask...' });
       const txHash = await sendWSR(POOL_WALLET, onchainDepositAmount);
 
-      // Step 2: Submit tx hash to backend for verification & crediting
+      // Step 2: Wait for backend to verify on-chain and credit account
+      setMessage({ type: 'success', text: 'Transaction sent! Verifying on chain...' });
       const res = await fetch('/api/wallet/onchain-deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,7 +164,7 @@ export default function WalletPage() {
       }
     } catch (err: any) {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
-        setMessage({ type: 'error', text: 'Transaction rejected by user' });
+        setMessage({ type: 'error', text: 'Transaction rejected' });
       } else {
         setMessage({ type: 'error', text: err.message || 'Deposit failed' });
       }
@@ -692,14 +694,14 @@ export default function WalletPage() {
 
                     <div className="bg-secondary/20 rounded-lg p-3 mb-3 text-xs space-y-1.5">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Your MetaMask WSR</span>
+                        <span className="text-muted-foreground">Your Wallet</span>
+                        <span className="font-mono text-[10px]">{address?.slice(0, 8)}...{address?.slice(-6)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">MetaMask WSR Balance</span>
                         <span className="font-bold font-mono text-emerald-400">
                           {(() => { const w = wsrBalance || onChainBalance?.wsr; return w ? parseFloat(w).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'; })()} WSR
                         </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Receiving wallet</span>
-                        <span className="font-mono text-[10px]">{POOL_WALLET.slice(0, 8)}...{POOL_WALLET.slice(-6)}</span>
                       </div>
                     </div>
 

@@ -463,10 +463,44 @@ export default function AdminPage() {
                   </a>
                 </div>
 
+                {/* Withdraw Pool WSR to MetaMask */}
+                <div className="bg-black/20 rounded-xl p-3 mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-amber-300">Withdraw Pool WSR</p>
+                    <p className="text-[10px] text-muted-foreground">Send accumulated fee WSR to your MetaMask wallet</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[11px] font-bold gap-1.5 h-9"
+                    onClick={async () => {
+                      const amount = prompt('Enter WSR amount to withdraw to your MetaMask:');
+                      if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
+                      try {
+                        const res = await fetch('/api/admin/pool', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ amount: Number(amount) }),
+                        });
+                        const d = await res.json();
+                        if (res.ok) {
+                          alert(`Success! ${d.amount} WSR sent to your wallet.\nTX: ${d.txHash}`);
+                          fetchData();
+                        } else {
+                          alert(`Error: ${d.error}`);
+                        }
+                      } catch (e: any) {
+                        alert('Failed: ' + e.message);
+                      }
+                    }}
+                  >
+                    <ArrowUpRight size={13} /> Withdraw to MetaMask
+                  </Button>
+                </div>
+
                 <div className="grid grid-cols-4 gap-3">
                   <div className="bg-black/20 rounded-xl p-3 text-center">
                     <div className="text-2xl font-black text-amber-400">{data?.pool.totalWSR.toFixed(4) || '0'}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">WSR in Pool</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">WSR in Pool (DB)</div>
                     <div className="text-[10px] text-muted-foreground/60">${((data?.pool.totalWSR || 0) * 0.001).toFixed(6)}</div>
                   </div>
                   <div className="bg-black/20 rounded-xl p-3 text-center">
