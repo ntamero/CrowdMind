@@ -36,7 +36,7 @@ interface ClaimData {
 }
 
 export default function WalletPage() {
-  const { isConnected, address, balance, wsrBalance, chainName, connect, disconnect, isConnecting, switchToPolygon, refreshWsrBalance } = useWallet();
+  const { isConnected, address, balance, wsrBalance, chainName, connect, disconnect, isConnecting, switchToPolygon, refreshWsrBalance, sendWSR } = useWallet();
   const { profile } = useAuth();
 
   const [claimData, setClaimData] = useState<ClaimData | null>(null);
@@ -50,6 +50,14 @@ export default function WalletPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [onChainBalance, setOnChainBalance] = useState<{ wsr: string; pol: string } | null>(null);
+  const [onchainDepositAmount, setOnchainDepositAmount] = useState(1);
+  const [onchainDepositing, setOnchainDepositing] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState(1);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [showOnchainDeposit, setShowOnchainDeposit] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
+
+  const POOL_WALLET = '0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119';
 
   const fetchClaimData = useCallback(async () => {
     try {
@@ -126,6 +134,66 @@ export default function WalletPage() {
       setMessage({ type: 'error', text: 'Network error' });
     }
     setDepositing(false);
+  };
+
+  // On-chain deposit: MetaMask → Site (send WSR to pool wallet, backend credits account)
+  const handleOnchainDeposit = async () => {
+    if (onchainDepositing || !isConnected) return;
+    setOnchainDepositing(true);
+    setMessage(null);
+    try {
+      // Step 1: Send WSR from MetaMask to pool wallet via ERC-20 transfer
+      const txHash = await sendWSR(POOL_WALLET, onchainDepositAmount);
+
+      // Step 2: Submit tx hash to backend for verification & crediting
+      const res = await fetch('/api/wallet/onchain-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txHash }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: data.message || `Deposited ${onchainDepositAmount} WSR!` });
+        setShowOnchainDeposit(false);
+        fetchClaimData();
+        refreshWsrBalance();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Deposit verification failed' });
+      }
+    } catch (err: any) {
+      if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+        setMessage({ type: 'error', text: 'Transaction rejected by user' });
+      } else {
+        setMessage({ type: 'error', text: err.message || 'Deposit failed' });
+      }
+    }
+    setOnchainDepositing(false);
+  };
+
+  // On-chain withdraw: Site → MetaMask (backend sends WSR to user's wallet)
+  const handleWithdraw = async () => {
+    if (withdrawing || !isConnected) return;
+    setWithdrawing(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/wallet/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: withdrawAmount }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({ type: 'success', text: `${data.message} TX: ${data.txHash?.slice(0, 14)}...` });
+        setShowWithdraw(false);
+        fetchClaimData();
+        refreshWsrBalance();
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Withdrawal failed' });
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Withdrawal failed' });
+    }
+    setWithdrawing(false);
   };
 
   const xp = claimData?.currentXP ?? profile?.xp ?? 0;
@@ -581,6 +649,174 @@ export default function WalletPage() {
           </div>
         )}
 
+        {/* ─── On-Chain Operations (Deposit WSR from MetaMask / Withdraw WSR to MetaMask) ─── */}
+        {isConnected && address && (
+          <div className="bg-card/30 border border-purple-500/20 rounded-2xl p-5 mb-6">
+            <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+              <ArrowRightLeft size={14} className="text-purple-400" />
+              On-Chain WSR Transfer
+            </h3>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Deposit from MetaMask */}
+              <Button
+                onClick={() => { setShowOnchainDeposit(!showOnchainDeposit); setShowWithdraw(false); }}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white gap-2 h-12 text-sm font-bold shadow-lg shadow-emerald-600/20"
+              >
+                <ArrowDownLeft size={16} />
+                Deposit WSR
+                <span className="text-[10px] opacity-70">MetaMask → Site</span>
+              </Button>
+
+              {/* Withdraw to MetaMask */}
+              <Button
+                onClick={() => { setShowWithdraw(!showWithdraw); setShowOnchainDeposit(false); }}
+                disabled={(unclaimedWSR || 0) < 1}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white gap-2 h-12 text-sm font-bold shadow-lg shadow-violet-600/20"
+              >
+                <ArrowUpRight size={16} />
+                Withdraw WSR
+                <span className="text-[10px] opacity-70">Site → MetaMask</span>
+              </Button>
+            </div>
+
+            {/* ═══ On-Chain Deposit Panel ═══ */}
+            <AnimatePresence>
+              {showOnchainDeposit && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="border border-emerald-500/20 rounded-xl p-4 bg-emerald-500/5">
+                    <h4 className="text-xs font-bold mb-3 flex items-center gap-2 text-emerald-400">
+                      <ArrowDownLeft size={14} />
+                      Deposit WSR from MetaMask to Site
+                    </h4>
+
+                    <div className="bg-secondary/20 rounded-lg p-3 mb-3 text-xs space-y-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Your MetaMask WSR</span>
+                        <span className="font-bold font-mono text-emerald-400">
+                          {(() => { const w = wsrBalance || onChainBalance?.wsr; return w ? parseFloat(w).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'; })()} WSR
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Receiving wallet</span>
+                        <span className="font-mono text-[10px]">{POOL_WALLET.slice(0, 8)}...{POOL_WALLET.slice(-6)}</span>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <p className="text-[10px] text-muted-foreground mb-2">Amount to deposit:</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {[1, 10, 100, 1000, 10000].map(amt => (
+                          <button key={amt} onClick={() => setOnchainDepositAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', onchainDepositAmount === amt ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            {amt.toLocaleString()} WSR
+                          </button>
+                        ))}
+                        {wsrBalance && parseFloat(wsrBalance) >= 1 && (
+                          <button onClick={() => setOnchainDepositAmount(Math.floor(parseFloat(wsrBalance)))} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', onchainDepositAmount === Math.floor(parseFloat(wsrBalance || '0')) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                            MAX
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3 mb-3 text-xs space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">WSR to deposit</span>
+                        <span className="font-bold font-mono">{onchainDepositAmount.toLocaleString()} WSR</span>
+                      </div>
+                      <div className="flex justify-between border-t border-emerald-500/10 pt-1">
+                        <span className="font-bold text-emerald-400">Credited to your account</span>
+                        <span className="font-bold font-mono text-emerald-400">{onchainDepositAmount.toLocaleString()} WSR</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-muted-foreground mb-3">
+                      MetaMask will open to confirm the WSR transfer. After confirmation, your site balance will be credited.
+                    </p>
+
+                    <div className="flex gap-3">
+                      <Button onClick={handleOnchainDeposit} disabled={onchainDepositing} className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white h-10 font-bold gap-2 text-xs">
+                        {onchainDepositing ? <><RefreshCw size={12} className="animate-spin" /> Processing...</> : <><ArrowDownLeft size={12} /> Deposit {onchainDepositAmount.toLocaleString()} WSR</>}
+                      </Button>
+                      <Button onClick={() => setShowOnchainDeposit(false)} variant="outline" className="h-10 border-border/30 text-xs">Cancel</Button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ═══ Withdraw Panel ═══ */}
+            <AnimatePresence>
+              {showWithdraw && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                  <div className="border border-violet-500/20 rounded-xl p-4 bg-violet-500/5">
+                    <h4 className="text-xs font-bold mb-3 flex items-center gap-2 text-violet-400">
+                      <ArrowUpRight size={14} />
+                      Withdraw WSR to MetaMask
+                    </h4>
+
+                    <div className="bg-secondary/20 rounded-lg p-3 mb-3 text-xs space-y-1.5">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Your unclaimed WSR</span>
+                        <span className="font-bold font-mono text-violet-400">{unclaimedWSR} WSR</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Withdraw to</span>
+                        <span className="font-mono text-[10px]">{address?.slice(0, 8)}...{address?.slice(-6)}</span>
+                      </div>
+                    </div>
+
+                    {unclaimedWSR >= 1 ? (
+                      <>
+                        <div className="mb-3">
+                          <p className="text-[10px] text-muted-foreground mb-2">Amount to withdraw:</p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {[1, 5, 10, 50, 100].filter(a => a <= Math.floor(unclaimedWSR)).map(amt => (
+                              <button key={amt} onClick={() => setWithdrawAmount(amt)} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', withdrawAmount === amt ? 'bg-violet-500/20 text-violet-400 border-violet-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                                {amt} WSR
+                              </button>
+                            ))}
+                            <button onClick={() => setWithdrawAmount(Math.floor(unclaimedWSR))} className={cn('px-3 py-2 rounded-lg text-xs font-bold transition-all border', withdrawAmount === Math.floor(unclaimedWSR) ? 'bg-violet-500/20 text-violet-400 border-violet-500/40' : 'bg-secondary/20 text-muted-foreground border-transparent hover:bg-secondary/40')}>
+                              MAX ({Math.floor(unclaimedWSR)})
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="bg-violet-500/5 border border-violet-500/10 rounded-lg p-3 mb-3 text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">WSR to withdraw</span>
+                            <span className="font-bold font-mono">{withdrawAmount} WSR</span>
+                          </div>
+                          <div className="flex justify-between border-t border-violet-500/10 pt-1">
+                            <span className="font-bold text-violet-400">Sent to your MetaMask</span>
+                            <span className="font-bold font-mono text-violet-400">{withdrawAmount} WSR</span>
+                          </div>
+                        </div>
+
+                        <p className="text-[10px] text-muted-foreground mb-3">
+                          WSR will be sent to your connected wallet on Polygon Amoy. This may take a few seconds.
+                        </p>
+
+                        <div className="flex gap-3">
+                          <Button onClick={handleWithdraw} disabled={withdrawing} className="flex-1 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white h-10 font-bold gap-2 text-xs">
+                            {withdrawing ? <><RefreshCw size={12} className="animate-spin" /> Sending...</> : <><ArrowUpRight size={12} /> Withdraw {withdrawAmount} WSR</>}
+                          </Button>
+                          <Button onClick={() => setShowWithdraw(false)} variant="outline" className="h-10 border-border/30 text-xs">Cancel</Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-xs text-muted-foreground">No unclaimed WSR available for withdrawal.</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">Convert XP → WSR first, or deposit WSR from MetaMask.</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
         {/* ─── How It Works ─── */}
         <div className="bg-card/30 border border-border/20 rounded-2xl p-5 mb-6">
           <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
@@ -589,10 +825,10 @@ export default function WalletPage() {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             {[
-              { icon: Gift, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Earn XP', desc: 'Vote, predict, and bet correctly' },
+              { icon: Gift, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Earn XP', desc: 'Vote, predict, comment, create questions' },
               { icon: ArrowRightLeft, color: 'text-blue-400', bg: 'bg-blue-500/10', title: 'Convert', desc: `${xpPerWSR} XP = 1 WSR (${fee} XP fee)` },
-              { icon: Wallet, color: 'text-purple-400', bg: 'bg-purple-500/10', title: 'Connect', desc: 'Link MetaMask wallet' },
-              { icon: ArrowUpRight, color: 'text-amber-400', bg: 'bg-amber-500/10', title: 'Withdraw', desc: 'Claim WSR on Polygon' },
+              { icon: ArrowDownLeft, color: 'text-teal-400', bg: 'bg-teal-500/10', title: 'Deposit', desc: 'Send WSR from MetaMask to site' },
+              { icon: ArrowUpRight, color: 'text-violet-400', bg: 'bg-violet-500/10', title: 'Withdraw', desc: 'Send WSR from site to MetaMask' },
             ].map((step, i) => (
               <div key={step.title} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/10">
                 <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', step.bg)}>

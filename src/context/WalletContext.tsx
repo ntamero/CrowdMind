@@ -1,10 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { BrowserProvider, Contract, formatEther, formatUnits } from 'ethers';
+import { BrowserProvider, Contract, formatEther, formatUnits, parseUnits } from 'ethers';
 
 const WSR_CONTRACT = process.env.NEXT_PUBLIC_WSR_CONTRACT || '';
-const WSR_ABI = ['function balanceOf(address) view returns (uint256)'];
+const WSR_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+];
 
 interface WalletState {
   address: string | null;
@@ -22,6 +25,7 @@ interface WalletContextType extends WalletState {
   disconnect: () => void;
   switchToPolygon: () => Promise<void>;
   refreshWsrBalance: () => Promise<void>;
+  sendWSR: (to: string, amount: number) => Promise<string>;
 }
 
 const POLYGON_CHAIN_ID = 137;
@@ -49,6 +53,7 @@ const WalletContext = createContext<WalletContextType>({
   disconnect: () => {},
   switchToPolygon: async () => {},
   refreshWsrBalance: async () => {},
+  sendWSR: async () => '',
 });
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -248,6 +253,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const sendWSR = useCallback(async (to: string, amount: number): Promise<string> => {
+    const provider = getProvider();
+    if (!provider || !WSR_CONTRACT) throw new Error('Wallet not connected');
+    const signer = await provider.getSigner();
+    const contract = new Contract(WSR_CONTRACT, WSR_ABI, signer);
+    const amountWei = parseUnits(amount.toString(), 18);
+    const tx = await contract.transfer(to, amountWei);
+    const receipt = await tx.wait();
+    if (!receipt || receipt.status !== 1) throw new Error('Transaction failed');
+    // Refresh balance after transfer
+    if (state.address) updateBalance(state.address);
+    return receipt.hash;
+  }, [state.address, updateBalance]);
+
   // Listen for account/chain changes
   useEffect(() => {
     const eth = (window as any)?.ethereum;
@@ -323,7 +342,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <WalletContext.Provider value={{ ...state, connect, disconnect, switchToPolygon, refreshWsrBalance }}>
+    <WalletContext.Provider value={{ ...state, connect, disconnect, switchToPolygon, refreshWsrBalance, sendWSR }}>
       {children}
     </WalletContext.Provider>
   );
