@@ -3,158 +3,87 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Shield, Settings, Users, MessageSquare, BarChart3, Zap,
-  TrendingUp, TrendingDown, AlertTriangle, Activity, Globe, Eye,
-  Trash2, CheckCircle, Plus, Edit3, DollarSign, Wallet,
-  Clock, Mail, Target, Crown, Flame, ArrowUpRight,
-  ArrowDownRight, PieChart, Monitor, CreditCard, Send,
-  Tag, Layers, Timer, LineChart, Search, MoreHorizontal,
-  XCircle, ChevronRight, RefreshCw, Bell, Ban, ExternalLink,
+  Shield, Users, MessageSquare, BarChart3, Zap,
+  TrendingUp, AlertTriangle, Activity, Globe, Eye,
+  Trash2, CheckCircle, Plus, Edit3, Wallet,
+  Clock, Mail, Target, Flame, ArrowUpRight,
+  ArrowDownRight, Monitor, Send,
+  Tag, Layers, Timer, LineChart, Search,
+  RefreshCw, Ban, ExternalLink, Coins, Copy,
+  ArrowRightLeft, Award, Hash,
 } from 'lucide-react';
-import { mockStats, mockQuestions, mockUsers, categories as categoryList } from '@/lib/mock-data';
+import { categories as categoryList } from '@/lib/mock-data';
 import { formatNumber, timeAgo, cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
-// ── Admin Tabs ──
+// Pool WSR wallet address (deployer wallet)
+const POOL_WALLET_ADDRESS = '0xDB44F5cFEB7D04afC516BDF99C3721f39f4cF119';
+
 const adminTabs = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'questions', label: 'Questions', icon: MessageSquare },
   { id: 'categories', label: 'Categories', icon: Tag },
-  { id: 'revenue', label: 'Revenue', icon: DollarSign },
-  { id: 'visitors', label: 'Visitors', icon: Monitor },
   { id: 'earnings', label: 'Earnings', icon: TrendingUp },
   { id: 'wallets', label: 'Wallets', icon: Wallet },
-  { id: 'options', label: 'Options', icon: Target },
-  { id: 'trading', label: 'Trading', icon: LineChart },
+  { id: 'transactions', label: 'Transactions', icon: Activity },
   { id: 'timers', label: 'Timers', icon: Timer },
-  { id: 'mail', label: 'Mail', icon: Mail },
-  { id: 'ads', label: 'Ads', icon: Layers },
 ] as const;
 
 type AdminTab = (typeof adminTabs)[number]['id'];
 
-// ── Mock Admin Data ──
-const revenueData = {
-  today: 1245.80,
-  thisWeek: 8920.50,
-  thisMonth: 42680.00,
-  allTime: 384520.00,
-  subscriptions: 28400.00,
-  ads: 9800.00,
-  commissions: 4480.00,
-  daily: [
-    { date: 'Mar 15', amount: 1245 },
-    { date: 'Mar 14', amount: 1120 },
-    { date: 'Mar 13', amount: 1580 },
-    { date: 'Mar 12', amount: 980 },
-    { date: 'Mar 11', amount: 1340 },
-    { date: 'Mar 10', amount: 1890 },
-    { date: 'Mar 09', amount: 1650 },
-  ],
-};
-
-const visitorData = {
-  today: 12450,
-  thisWeek: 84200,
-  thisMonth: 342800,
-  uniqueToday: 8900,
-  pageViews: 45600,
-  bounceRate: 32.5,
-  avgSession: '4m 22s',
-  topPages: [
-    { page: '/', views: 15200, name: 'Homepage' },
-    { page: '/predictions', views: 8900, name: 'Predictions' },
-    { page: '/questions', views: 6700, name: 'Questions' },
-    { page: '/leaderboard', views: 4200, name: 'Leaderboard' },
-    { page: '/pricing', views: 3100, name: 'Pricing' },
-  ],
-  countries: [
-    { name: 'United States', visitors: 45200, flag: '🇺🇸' },
-    { name: 'Turkey', visitors: 28400, flag: '🇹🇷' },
-    { name: 'United Kingdom', visitors: 18900, flag: '🇬🇧' },
-    { name: 'Germany', visitors: 15600, flag: '🇩🇪' },
-    { name: 'Japan', visitors: 12300, flag: '🇯🇵' },
-  ],
-};
-
-const memberEarnings = [
-  { user: 'Emily Davis', earned: 4820.50, questions: 112, accuracy: 82.1, status: 'active', plan: 'Premium' },
-  { user: 'Alex Chen', earned: 3420.80, questions: 89, accuracy: 78.5, status: 'active', plan: 'Pro' },
-  { user: 'Sara Kim', earned: 2890.30, questions: 45, accuracy: 72.3, status: 'active', plan: 'Pro' },
-  { user: 'Mike Johnson', earned: 1560.20, questions: 23, accuracy: 65.8, status: 'active', plan: 'Free' },
-  { user: 'James Wilson', earned: 780.10, questions: 12, accuracy: 58.2, status: 'suspended', plan: 'Free' },
-];
-
-// Wallet entries loaded from API (see useEffect below)
-
-const tradingActivity = [
-  { id: 'tr1', user: 'Alex Chen', market: 'Bitcoin Above $150K', action: 'BUY YES', amount: 50, odds: 1.8, time: '2m ago', status: 'filled' },
-  { id: 'tr2', user: 'Emily Davis', market: 'GPT-5 Before July', action: 'BUY YES', amount: 100, odds: 1.4, time: '5m ago', status: 'filled' },
-  { id: 'tr3', user: 'Sara Kim', market: 'Apple AR Glasses', action: 'BUY NO', amount: 30, odds: 2.1, time: '8m ago', status: 'filled' },
-  { id: 'tr4', user: 'Mike Johnson', market: 'Champions League', action: 'BUY YES', amount: 25, odds: 2.8, time: '12m ago', status: 'pending' },
-  { id: 'tr5', user: 'James Wilson', market: 'AI Regulation', action: 'BUY NO', amount: 15, odds: 2.2, time: '15m ago', status: 'filled' },
-];
-
-const adCampaigns = [
-  { id: 'ad1', name: 'Pro Plan Promotion', status: 'active', impressions: 124500, clicks: 3200, ctr: 2.57, revenue: 1280, startDate: '2026-03-01', endDate: '2026-03-31' },
-  { id: 'ad2', name: 'Crypto Markets Banner', status: 'active', impressions: 89000, clicks: 2100, ctr: 2.36, revenue: 890, startDate: '2026-03-05', endDate: '2026-04-05' },
-  { id: 'ad3', name: 'Prediction Challenge', status: 'paused', impressions: 56000, clicks: 1400, ctr: 2.50, revenue: 560, startDate: '2026-02-15', endDate: '2026-03-15' },
-  { id: 'ad4', name: 'Referral Campaign', status: 'draft', impressions: 0, clicks: 0, ctr: 0, revenue: 0, startDate: '2026-03-20', endDate: '2026-04-20' },
-];
-
-const mailTemplates = [
-  { id: 'm1', name: 'Welcome Email', type: 'onboarding', lastSent: '2026-03-15', recipients: 1240, openRate: 68.5, status: 'active' },
-  { id: 'm2', name: 'Weekly Digest', type: 'newsletter', lastSent: '2026-03-14', recipients: 45200, openRate: 42.3, status: 'active' },
-  { id: 'm3', name: 'Prediction Results', type: 'notification', lastSent: '2026-03-13', recipients: 8900, openRate: 78.2, status: 'active' },
-  { id: 'm4', name: 'Earnings Report', type: 'report', lastSent: '2026-03-10', recipients: 12400, openRate: 55.8, status: 'active' },
-  { id: 'm5', name: 'Premium Upgrade', type: 'marketing', lastSent: '2026-03-08', recipients: 32000, openRate: 35.1, status: 'paused' },
-];
-
-interface PoolData {
-  pool: { totalWSR: number; totalXPFees: number; txCount: number; updatedAt: string };
-  stats: { totalUsers: number; connectedWallets: number; totalUnclaimedWSR: number; totalClaimedWSR: number };
-  walletUsers: Array<{ id: string; displayName: string | null; username: string | null; walletAddress: string | null; walletChain: string | null; xp: number; unclaimedWSR: number; totalClaimedWSR: number }>;
-  recentPoolTxs: Array<{ id: string; userId: string; feeXP: number; feeWSR: number; description: string | null; createdAt: string }>;
+interface AdminData {
+  overview: {
+    totalUsers: number; totalQuestions: number; totalVotes: number; totalComments: number;
+    totalPredictions: number; totalTokenTxs: number; totalXPAwarded: number;
+    usersToday: number; usersWeek: number; questionsToday: number; votesToday: number;
+    activeQuestions: number; expiringSoon: number;
+  };
+  recentUsers: any[];
+  recentQuestions: any[];
+  recentTransactions: any[];
+  topEarners: any[];
+  pool: { totalWSR: number; totalXPFees: number; txCount: number; updatedAt: string | null };
+  walletStats: { connectedWallets: number; totalUnclaimedWSR: number; totalClaimedWSR: number };
+  walletUsers: any[];
+  poolTxs: any[];
 }
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
+  const [data, setData] = useState<AdminData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  // Categories (local state for now)
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryEmoji, setNewCategoryEmoji] = useState('');
-  const [localCategories, setLocalCategories] = useState(categoryList.map(c => ({ ...c, questionCount: Math.floor(Math.random() * 5000) + 500 })));
-  const [poolData, setPoolData] = useState<PoolData | null>(null);
-  const [poolLoading, setPoolLoading] = useState(false);
+  const [localCategories, setLocalCategories] = useState(categoryList.map(c => ({ ...c, questionCount: 0 })));
 
-  const fetchPoolData = useCallback(async () => {
-    setPoolLoading(true);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/admin/pool');
+      const res = await fetch('/api/admin/stats');
       if (res.ok) {
-        const data = await res.json();
-        setPoolData(data);
+        const d = await res.json();
+        setData(d);
+        // Update category counts from real questions
+        if (d.recentQuestions) {
+          const counts: Record<string, number> = {};
+          d.recentQuestions.forEach((q: any) => { counts[q.category] = (counts[q.category] || 0) + 1; });
+          setLocalCategories(prev => prev.map(c => ({ ...c, questionCount: counts[c.value] || c.questionCount })));
+        }
       }
     } catch {}
-    setPoolLoading(false);
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    if (activeTab === 'wallets') {
-      fetchPoolData();
-    }
-  }, [activeTab, fetchPoolData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  const dashboardStats = [
-    { icon: Users, label: 'Total Users', value: formatNumber(mockStats.totalUsers), change: '+12.5%', color: '#6366f1', positive: true },
-    { icon: MessageSquare, label: 'Questions', value: formatNumber(mockStats.totalQuestions), change: '+8.3%', color: '#f59e0b', positive: true },
-    { icon: BarChart3, label: 'Total Votes', value: formatNumber(mockStats.totalVotes), change: '+23.1%', color: '#10b981', positive: true },
-    { icon: Zap, label: 'Predictions', value: formatNumber(mockStats.totalPredictions), change: '+5.7%', color: '#8b5cf6', positive: true },
-    { icon: DollarSign, label: 'Revenue', value: `$${formatNumber(revenueData.thisMonth)}`, change: '+18.2%', color: '#ef4444', positive: true },
-    { icon: Globe, label: 'Active Now', value: formatNumber(mockStats.activeNow), change: '+3.1%', color: '#06b6d4', positive: true },
-  ];
+  const o = data?.overview;
 
   const addCategory = () => {
     if (!newCategoryName.trim()) return;
@@ -169,18 +98,27 @@ export default function AdminPage() {
     setNewCategoryEmoji('');
   };
 
-  const removeCategory = (value: string) => {
-    setLocalCategories(localCategories.filter(c => c.value !== value));
+  const copyPoolAddress = () => {
+    navigator.clipboard.writeText(POOL_WALLET_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
+
+  if (loading && !data) {
+    return (
+      <div className="max-w-full mx-auto py-4">
+        <div className="flex items-center justify-center py-20">
+          <RefreshCw size={20} className="animate-spin text-muted-foreground mr-2" />
+          <span className="text-muted-foreground">Loading admin data...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-full mx-auto py-4">
-      {/* ── Header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-5 flex items-center justify-between"
-      >
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5 flex items-center justify-between">
         <div>
           <h1 className="flex items-center gap-2.5 text-2xl font-black">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center">
@@ -188,25 +126,20 @@ export default function AdminPage() {
             </div>
             Admin Panel
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Platform management & analytics</p>
+          <p className="mt-1 text-sm text-muted-foreground">Platform management & analytics — Real-time data</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 gap-1">
-            <Activity size={11} /> System Online
+            <Activity size={11} /> Live
           </Badge>
-          <Button variant="outline" size="sm" className="gap-1.5 text-[12px]">
-            <RefreshCw size={13} /> Refresh
+          <Button variant="outline" size="sm" className="gap-1.5 text-[12px]" onClick={fetchData}>
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
           </Button>
         </div>
       </motion.div>
 
-      {/* ── Tab Navigation (scrollable) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="mb-6 overflow-x-auto"
-      >
+      {/* Tab Navigation */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6 overflow-x-auto">
         <div className="flex gap-1 bg-card/50 border border-border/30 rounded-xl p-1 min-w-max">
           {adminTabs.map((tab) => (
             <button
@@ -225,20 +158,22 @@ export default function AdminPage() {
         </div>
       </motion.div>
 
-      {/* ── Tab Content ── */}
+      {/* Tab Content */}
       <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
+        <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+
           {/* ═══════ OVERVIEW ═══════ */}
           {activeTab === 'overview' && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                {dashboardStats.map((stat) => {
+                {[
+                  { icon: Users, label: 'Total Users', value: o?.totalUsers || 0, sub: `+${o?.usersToday || 0} today`, color: '#6366f1' },
+                  { icon: MessageSquare, label: 'Questions', value: o?.totalQuestions || 0, sub: `+${o?.questionsToday || 0} today`, color: '#f59e0b' },
+                  { icon: BarChart3, label: 'Total Votes', value: o?.totalVotes || 0, sub: `+${o?.votesToday || 0} today`, color: '#10b981' },
+                  { icon: Zap, label: 'XP Awarded', value: o?.totalXPAwarded || 0, sub: `${o?.totalTokenTxs || 0} txs`, color: '#8b5cf6' },
+                  { icon: Wallet, label: 'Pool WSR', value: data?.pool.totalWSR.toFixed(2) || '0', sub: `$${((data?.pool.totalWSR || 0) * 0.001).toFixed(4)}`, color: '#ef4444' },
+                  { icon: Globe, label: 'Active Q', value: o?.activeQuestions || 0, sub: `${o?.expiringSoon || 0} expiring`, color: '#06b6d4' },
+                ].map((stat) => {
                   const Icon = stat.icon;
                   return (
                     <div key={stat.label} className="bg-card/60 border border-border/30 rounded-xl p-4">
@@ -246,13 +181,10 @@ export default function AdminPage() {
                         <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${stat.color}18` }}>
                           <Icon size={16} style={{ color: stat.color }} />
                         </div>
-                        <span className={cn('text-[10px] font-bold flex items-center gap-0.5', stat.positive ? 'text-emerald-400' : 'text-red-400')}>
-                          {stat.positive ? <ArrowUpRight size={9} /> : <ArrowDownRight size={9} />}
-                          {stat.change}
-                        </span>
                       </div>
-                      <div className="text-xl font-black">{stat.value}</div>
+                      <div className="text-xl font-black">{typeof stat.value === 'number' ? formatNumber(stat.value) : stat.value}</div>
                       <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+                      <div className="text-[9px] text-emerald-400 mt-0.5">{stat.sub}</div>
                     </div>
                   );
                 })}
@@ -265,58 +197,61 @@ export default function AdminPage() {
                     <MessageSquare size={15} className="text-indigo-400" /> Recent Questions
                   </h3>
                   <div className="space-y-2">
-                    {mockQuestions.slice(0, 5).map((q) => (
+                    {(data?.recentQuestions || []).slice(0, 6).map((q: any) => (
                       <div key={q.id} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors">
                         <div className="min-w-0 flex-1">
                           <p className="text-[12px] font-semibold truncate">{q.title}</p>
-                          <p className="text-[10px] text-muted-foreground">{q.user.displayName} · {formatNumber(q.totalVotes)} votes · {timeAgo(q.createdAt)}</p>
+                          <p className="text-[10px] text-muted-foreground">{q.user?.displayName || q.user?.username} · {formatNumber(q.totalVotes)} votes · {q.category}</p>
                         </div>
-                        <div className="flex gap-1 ml-2">
-                          <button className="w-7 h-7 rounded-md bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer border-0">
-                            <CheckCircle size={12} className="text-emerald-500" />
-                          </button>
-                          <button className="w-7 h-7 rounded-md bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0">
-                            <Trash2 size={12} className="text-red-500" />
-                          </button>
-                        </div>
+                        <Badge className={cn('text-[9px] border-0 capitalize ml-2', q.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400')}>{q.status}</Badge>
                       </div>
                     ))}
+                    {(!data?.recentQuestions || data.recentQuestions.length === 0) && (
+                      <p className="text-sm text-muted-foreground text-center py-4">No questions yet</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Users */}
+                {/* Recent Users */}
                 <div className="bg-card/60 border border-border/30 rounded-xl p-5">
                   <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
                     <Users size={15} className="text-purple-400" /> Recent Users
                   </h3>
                   <div className="space-y-2">
-                    {mockUsers.map((user) => (
+                    {(data?.recentUsers || []).slice(0, 6).map((user: any) => (
                       <div key={user.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
-                          {user.displayName.charAt(0)}
+                          {(user.displayName || user.username || user.email || '?').charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[12px] font-semibold">{user.displayName}</p>
-                          <p className="text-[10px] text-muted-foreground">@{user.username} · Rep: {formatNumber(user.reputation)}</p>
+                          <p className="text-[12px] font-semibold">{user.displayName || user.username || user.email}</p>
+                          <p className="text-[10px] text-muted-foreground">{user.xp} XP · Lv.{user.level} · {timeAgo(user.createdAt)}</p>
                         </div>
-                        <Badge className={cn('text-[9px] border-0', user.isPremium ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-500/10 text-slate-400')}>
-                          {user.isPremium ? 'Premium' : 'Free'}
-                        </Badge>
+                        <div className="text-right">
+                          <Badge className={cn('text-[9px] border-0', user.role === 'admin' ? 'bg-red-500/10 text-red-400' : user.walletAddress ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400')}>
+                            {user.role === 'admin' ? 'Admin' : user.walletAddress ? 'Wallet' : 'Free'}
+                          </Badge>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Flagged */}
-              <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
-                  <AlertTriangle size={15} className="text-red-400" /> Flagged Content
-                </h3>
-                <div className="py-8 text-center text-sm text-muted-foreground">
-                  <CheckCircle size={28} className="mx-auto mb-2 text-emerald-500" />
-                  <p>No flagged content. All clear!</p>
+              {/* Pool Wallet Quick View */}
+              <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/20 border border-amber-500/20 rounded-xl p-4 flex items-center gap-4">
+                <Flame size={20} className="text-amber-400 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-amber-300">Pool Wallet</p>
+                  <p className="text-[11px] text-muted-foreground font-mono">{POOL_WALLET_ADDRESS}</p>
                 </div>
+                <div className="text-right">
+                  <p className="text-lg font-black text-amber-400">{data?.pool.totalWSR.toFixed(4) || '0'} WSR</p>
+                  <p className="text-[10px] text-muted-foreground">{data?.pool.txCount || 0} conversions</p>
+                </div>
+                <button onClick={copyPoolAddress} className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border-0">
+                  {copied ? <><CheckCircle size={11} /> Copied!</> : <><Copy size={11} /> Copy</>}
+                </button>
               </div>
             </div>
           )}
@@ -329,35 +264,36 @@ export default function AdminPage() {
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input placeholder="Search users..." className="pl-9 h-9 bg-secondary/30 border-border/40 text-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                 </div>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 text-[12px] h-9">
-                  <Plus size={13} /> Add User
-                </Button>
+                <Badge className="bg-indigo-500/10 text-indigo-400 border-0 text-[11px]">{o?.totalUsers || 0} total</Badge>
               </div>
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[1fr_120px_100px_100px_80px_60px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <span>User</span><span>Plan</span><span>Questions</span><span>Reputation</span><span>Status</span><span></span>
+                <div className="grid grid-cols-[1fr_80px_60px_60px_70px_80px_60px] gap-2 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span>User</span><span>XP / Level</span><span>Votes</span><span>Qs</span><span>WSR</span><span>Wallet</span><span>Role</span>
                 </div>
-                {mockUsers.filter(u => !searchQuery || u.displayName.toLowerCase().includes(searchQuery.toLowerCase())).map((user) => (
-                  <div key={user.id} className="grid grid-cols-[1fr_120px_100px_100px_80px_60px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">{user.displayName.charAt(0)}</div>
-                      <div className="min-w-0">
-                        <p className="text-[12px] font-semibold truncate">{user.displayName}</p>
-                        <p className="text-[10px] text-muted-foreground">@{user.username}</p>
+                {(data?.recentUsers || [])
+                  .filter((u: any) => !searchQuery || (u.displayName || u.username || u.email || '').toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((user: any) => (
+                    <div key={user.id} className="grid grid-cols-[1fr_80px_60px_60px_70px_80px_60px] gap-2 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                          {(user.displayName || user.username || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold truncate">{user.displayName || user.username || 'Unknown'}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                        </div>
                       </div>
+                      <div>
+                        <span className="text-[12px] font-bold text-amber-400">{user.xp}</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">Lv.{user.level}</span>
+                      </div>
+                      <span className="text-[12px]">{user.totalVotes}</span>
+                      <span className="text-[12px]">{user.totalQuestions}</span>
+                      <span className="text-[12px] font-mono text-emerald-400">{(user.unclaimedWSR || 0).toFixed(1)}</span>
+                      <code className="text-[9px] text-muted-foreground truncate">{user.walletAddress ? `${user.walletAddress.slice(0, 6)}...` : '—'}</code>
+                      <Badge className={cn('text-[8px] border-0 w-fit', user.role === 'admin' ? 'bg-red-500/10 text-red-400' : 'bg-slate-500/10 text-slate-400')}>{user.role}</Badge>
                     </div>
-                    <Badge className={cn('text-[9px] border-0 w-fit', user.isPremium ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-500/10 text-slate-400')}>
-                      <Crown size={9} className="mr-0.5" /> {user.isPremium ? 'Premium' : 'Free'}
-                    </Badge>
-                    <span className="text-[12px]">{user.totalQuestions}</span>
-                    <span className="text-[12px] font-semibold">{formatNumber(user.reputation)}</span>
-                    <Badge className="text-[9px] bg-emerald-500/10 text-emerald-400 border-0 w-fit">Active</Badge>
-                    <div className="flex gap-1">
-                      <button className="w-6 h-6 rounded bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer border-0"><Eye size={11} className="text-muted-foreground" /></button>
-                      <button className="w-6 h-6 rounded bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0"><Ban size={11} className="text-red-400" /></button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -366,28 +302,28 @@ export default function AdminPage() {
           {activeTab === 'questions' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold">All Questions ({mockQuestions.length})</h3>
-                <div className="relative max-w-xs">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input placeholder="Search questions..." className="pl-9 h-9 bg-secondary/30 border-border/40 text-sm" />
-                </div>
+                <h3 className="text-lg font-bold">All Questions ({o?.totalQuestions || 0})</h3>
+                <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-[11px]">{o?.activeQuestions || 0} active</Badge>
               </div>
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                {mockQuestions.map((q) => (
+                {(data?.recentQuestions || []).map((q: any) => (
                   <div key={q.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/10 hover:bg-secondary/10 transition-colors">
-                    {q.image && <img src={q.image} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />}
+                    {q.imageUrl && <img src={q.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold truncate">{q.title}</p>
-                      <p className="text-[10px] text-muted-foreground">{q.user.displayName} · {q.category} · {formatNumber(q.totalVotes)} votes</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {q.user?.displayName || q.user?.username} · {q.category} · {formatNumber(q.totalVotes)} votes · {q.options?.length || 0} options
+                      </p>
                     </div>
-                    <Badge className={cn('text-[9px] border-0 capitalize', q.status === 'trending' ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400')}>{q.status}</Badge>
-                    <div className="flex gap-1">
-                      <button className="w-7 h-7 rounded-md bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer border-0"><Eye size={12} className="text-muted-foreground" /></button>
-                      <button className="w-7 h-7 rounded-md bg-emerald-500/10 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer border-0"><CheckCircle size={12} className="text-emerald-500" /></button>
-                      <button className="w-7 h-7 rounded-md bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0"><Trash2 size={12} className="text-red-500" /></button>
-                    </div>
+                    <Badge className={cn('text-[9px] border-0 capitalize', q.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400')}>{q.status}</Badge>
+                    {q.expiresAt && (
+                      <span className="text-[10px] text-muted-foreground">{timeAgo(q.expiresAt)}</span>
+                    )}
                   </div>
                 ))}
+                {(!data?.recentQuestions || data.recentQuestions.length === 0) && (
+                  <p className="text-center py-8 text-muted-foreground text-sm">No questions yet</p>
+                )}
               </div>
             </div>
           )}
@@ -396,9 +332,7 @@ export default function AdminPage() {
           {activeTab === 'categories' && (
             <div className="space-y-5">
               <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
-                  <Plus size={15} className="text-indigo-400" /> Add New Category
-                </h3>
+                <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><Plus size={15} className="text-indigo-400" /> Add New Category</h3>
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 block">Category Name</label>
@@ -413,7 +347,6 @@ export default function AdminPage() {
                   </Button>
                 </div>
               </div>
-
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
                 <div className="grid grid-cols-[40px_1fr_80px_80px_60px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   <span>Icon</span><span>Name</span><span>Questions</span><span>Color</span><span></span>
@@ -425,92 +358,29 @@ export default function AdminPage() {
                       <p className="text-[13px] font-semibold capitalize">{cat.label}</p>
                       <p className="text-[10px] text-muted-foreground">{cat.value}</p>
                     </div>
-                    <span className="text-[12px] font-medium">{formatNumber(cat.questionCount)}</span>
+                    <span className="text-[12px] font-medium">{cat.questionCount}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="w-3 h-3 rounded-full" style={{ background: cat.color }} />
                       <span className="text-[10px] text-muted-foreground">{cat.color}</span>
                     </div>
-                    <div className="flex gap-1">
-                      <button className="w-6 h-6 rounded bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer border-0"><Edit3 size={11} className="text-muted-foreground" /></button>
-                      <button className="w-6 h-6 rounded bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0" onClick={() => removeCategory(cat.value)}><Trash2 size={11} className="text-red-400" /></button>
-                    </div>
+                    <button className="w-6 h-6 rounded bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0" onClick={() => setLocalCategories(prev => prev.filter(c => c.value !== cat.value))}>
+                      <Trash2 size={11} className="text-red-400" />
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* ═══════ REVENUE ═══════ */}
-          {activeTab === 'revenue' && (
+          {/* ═══════ EARNINGS ═══════ */}
+          {activeTab === 'earnings' && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[
-                  { label: 'Today', value: `$${revenueData.today.toLocaleString()}`, icon: Clock, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'This Week', value: `$${revenueData.thisWeek.toLocaleString()}`, icon: TrendingUp, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'This Month', value: `$${formatNumber(revenueData.thisMonth)}`, icon: BarChart3, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'All Time', value: `$${formatNumber(revenueData.allTime)}`, icon: DollarSign, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
-                    <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}>
-                      <s.icon size={18} className={s.color} />
-                    </div>
-                    <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><PieChart size={15} className="text-indigo-400" /> Revenue Sources</h3>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Subscriptions', value: revenueData.subscriptions, color: '#6366f1', pct: 67 },
-                      { label: 'Advertisements', value: revenueData.ads, color: '#f59e0b', pct: 23 },
-                      { label: 'Commissions', value: revenueData.commissions, color: '#10b981', pct: 10 },
-                    ].map((s) => (
-                      <div key={s.label}>
-                        <div className="flex justify-between text-[12px] mb-1">
-                          <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full" style={{ background: s.color }} />{s.label}</span>
-                          <span className="font-bold">${s.value.toLocaleString()} ({s.pct}%)</span>
-                        </div>
-                        <div className="h-2 bg-secondary/40 rounded-full overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${s.pct}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full" style={{ background: s.color }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><BarChart3 size={15} className="text-emerald-400" /> Daily Revenue</h3>
-                  <div className="space-y-2">
-                    {revenueData.daily.map((d) => {
-                      const max = Math.max(...revenueData.daily.map(x => x.amount));
-                      return (
-                        <div key={d.date} className="flex items-center gap-3">
-                          <span className="text-[11px] text-muted-foreground w-12 shrink-0">{d.date}</span>
-                          <div className="flex-1 h-5 bg-secondary/30 rounded-full overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${(d.amount / max) * 100}%` }} transition={{ duration: 0.6 }} className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500" />
-                          </div>
-                          <span className="text-[12px] font-bold w-14 text-right">${d.amount}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════ VISITORS ═══════ */}
-          {activeTab === 'visitors' && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Today', value: formatNumber(visitorData.today), icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Unique Today', value: formatNumber(visitorData.uniqueToday), icon: Eye, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Page Views', value: formatNumber(visitorData.pageViews), icon: Monitor, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'Bounce Rate', value: `${visitorData.bounceRate}%`, icon: ArrowDownRight, color: 'text-red-400', bg: 'bg-red-500/10' },
+                  { label: 'Total XP Awarded', value: `${formatNumber(o?.totalXPAwarded || 0)} XP`, icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Pool WSR Fees', value: `${data?.pool.totalWSR.toFixed(4) || '0'} WSR`, icon: Flame, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Total Conversions', value: data?.pool.txCount || 0, icon: ArrowRightLeft, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+                  { label: 'XP Fees Collected', value: `${data?.pool.totalXPFees || 0} XP`, icon: Coins, color: 'text-purple-400', bg: 'bg-purple-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
@@ -520,67 +390,36 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><Monitor size={15} className="text-indigo-400" /> Top Pages</h3>
-                  <div className="space-y-2">
-                    {visitorData.topPages.map((p, i) => (
-                      <div key={p.page} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20">
-                        <span className="text-[13px] font-black text-muted-foreground w-5 text-center">#{i + 1}</span>
-                        <div className="flex-1">
-                          <p className="text-[12px] font-semibold">{p.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{p.page}</p>
-                        </div>
-                        <span className="text-[12px] font-bold">{formatNumber(p.views)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><Globe size={15} className="text-cyan-400" /> Top Countries</h3>
-                  <div className="space-y-2">
-                    {visitorData.countries.map((c) => {
-                      const max = visitorData.countries[0].visitors;
-                      return (
-                        <div key={c.name} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/20">
-                          <span className="text-xl">{c.flag}</span>
-                          <div className="flex-1">
-                            <p className="text-[12px] font-semibold">{c.name}</p>
-                            <div className="h-1.5 bg-secondary/40 rounded-full overflow-hidden mt-1">
-                              <div className="h-full rounded-full bg-cyan-500" style={{ width: `${(c.visitors / max) * 100}%` }} />
-                            </div>
-                          </div>
-                          <span className="text-[12px] font-bold">{formatNumber(c.visitors)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════ EARNINGS (Member) ═══════ */}
-          {activeTab === 'earnings' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold">Member Earnings Tracking</h3>
+              {/* Top Earners */}
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[1fr_100px_80px_80px_80px_60px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <span>User</span><span>Plan</span><span>Earned</span><span>Questions</span><span>Accuracy</span><span>Status</span>
+                <h3 className="text-sm font-bold flex items-center gap-2 px-4 py-3 border-b border-border/20">
+                  <Award size={15} className="text-amber-400" /> Top Earners
+                </h3>
+                <div className="grid grid-cols-[1fr_80px_60px_60px_80px_70px] gap-2 px-4 py-2 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span>User</span><span>XP</span><span>Votes</span><span>Qs</span><span>WSR Earned</span><span>Streak</span>
                 </div>
-                {memberEarnings.map((m) => (
-                  <div key={m.user} className="grid grid-cols-[1fr_100px_80px_80px_80px_60px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
+                {(data?.topEarners || []).map((e: any, i: number) => (
+                  <div key={e.id} className="grid grid-cols-[1fr_80px_60px_60px_80px_70px] gap-2 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white shrink-0">{m.user.charAt(0)}</div>
-                      <span className="text-[12px] font-semibold">{m.user}</span>
+                      <span className="text-[12px] font-black text-muted-foreground w-5">#{i + 1}</span>
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        {(e.displayName || e.username || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-[12px] font-semibold truncate">{e.displayName || e.username || 'Unknown'}</span>
                     </div>
-                    <Badge className={cn('text-[9px] border-0 w-fit', m.plan === 'Premium' ? 'bg-amber-500/10 text-amber-400' : m.plan === 'Pro' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-slate-500/10 text-slate-400')}>{m.plan}</Badge>
-                    <span className="text-[12px] font-bold text-emerald-400">${m.earned.toLocaleString()}</span>
-                    <span className="text-[12px]">{m.questions}</span>
-                    <span className="text-[12px] font-semibold">{m.accuracy}%</span>
-                    <Badge className={cn('text-[9px] border-0', m.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400')}>{m.status}</Badge>
+                    <span className="text-[12px] font-bold text-amber-400">{e.xp.toLocaleString()}</span>
+                    <span className="text-[12px]">{e.totalVotes}</span>
+                    <span className="text-[12px]">{e.totalQuestions}</span>
+                    <span className="text-[12px] font-mono text-emerald-400">{((e.unclaimedWSR || 0) + (e.totalClaimedWSR || 0)).toFixed(2)}</span>
+                    <div className="flex items-center gap-1">
+                      <Flame size={11} className="text-orange-400" />
+                      <span className="text-[12px]">{e.streak || 0}d</span>
+                    </div>
                   </div>
                 ))}
+                {(!data?.topEarners || data.topEarners.length === 0) && (
+                  <p className="text-center py-6 text-muted-foreground text-sm">No earners yet</p>
+                )}
               </div>
             </div>
           )}
@@ -590,7 +429,7 @@ export default function AdminPage() {
             <div className="space-y-5">
               {/* Pool Wallet Card */}
               <div className="bg-gradient-to-br from-amber-900/40 via-orange-900/20 to-red-900/10 border border-amber-500/20 rounded-2xl p-5">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
                       <Flame size={24} className="text-amber-400" />
@@ -600,41 +439,57 @@ export default function AdminPage() {
                       <p className="text-[11px] text-muted-foreground">10 XP fee per conversion = 0.04 WSR to pool</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10" onClick={fetchPoolData}>
+                  <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10" onClick={fetchData}>
                     <RefreshCw size={12} /> Refresh
                   </Button>
                 </div>
-                {poolLoading ? (
-                  <div className="text-center py-4 text-muted-foreground text-sm">Loading...</div>
-                ) : (
-                  <div className="grid grid-cols-4 gap-3">
-                    <div className="bg-black/20 rounded-xl p-3 text-center">
-                      <div className="text-2xl font-black text-amber-400">{poolData?.pool.totalWSR.toFixed(4) || '0'}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">WSR in Pool</div>
-                      <div className="text-[10px] text-muted-foreground/60">${((poolData?.pool.totalWSR || 0) * 0.001).toFixed(6)}</div>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 text-center">
-                      <div className="text-2xl font-black text-orange-400">{poolData?.pool.totalXPFees || 0}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">XP Fees Collected</div>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 text-center">
-                      <div className="text-2xl font-black text-red-400">{poolData?.pool.txCount || 0}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Conversions</div>
-                    </div>
-                    <div className="bg-black/20 rounded-xl p-3 text-center">
-                      <div className="text-2xl font-black text-emerald-400">{(poolData?.stats.totalUnclaimedWSR || 0).toFixed(2)}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Unclaimed WSR</div>
-                    </div>
+
+                {/* Pool wallet address */}
+                <div className="bg-black/30 rounded-xl p-3 mb-4 flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">WSR Wallet Address</p>
+                    <p className="text-sm font-mono text-amber-300 break-all select-all">{POOL_WALLET_ADDRESS}</p>
                   </div>
-                )}
+                  <button onClick={copyPoolAddress} className="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer border-0 shrink-0">
+                    {copied ? <><CheckCircle size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+                  </button>
+                  <a
+                    href={`https://amoy.polygonscan.com/address/${POOL_WALLET_ADDRESS}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[11px] font-bold flex items-center gap-1.5 cursor-pointer no-underline shrink-0"
+                  >
+                    <ExternalLink size={12} /> Explorer
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="bg-black/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-black text-amber-400">{data?.pool.totalWSR.toFixed(4) || '0'}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">WSR in Pool</div>
+                    <div className="text-[10px] text-muted-foreground/60">${((data?.pool.totalWSR || 0) * 0.001).toFixed(6)}</div>
+                  </div>
+                  <div className="bg-black/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-black text-orange-400">{data?.pool.totalXPFees || 0}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">XP Fees Collected</div>
+                  </div>
+                  <div className="bg-black/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-black text-red-400">{data?.pool.txCount || 0}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Conversions</div>
+                  </div>
+                  <div className="bg-black/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl font-black text-emerald-400">{(data?.walletStats.totalUnclaimedWSR || 0).toFixed(2)}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Unclaimed</div>
+                  </div>
+                </div>
               </div>
 
               {/* Wallet Stats */}
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: 'Total Users', value: poolData?.stats.totalUsers || 0, icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Connected Wallets', value: poolData?.stats.connectedWallets || 0, icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Total Claimed WSR', value: `${(poolData?.stats.totalClaimedWSR || 0).toFixed(2)}`, icon: ArrowUpRight, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                  { label: 'Total Users', value: o?.totalUsers || 0, icon: Users, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+                  { label: 'Connected Wallets', value: data?.walletStats.connectedWallets || 0, icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Total Claimed WSR', value: `${(data?.walletStats.totalClaimedWSR || 0).toFixed(2)}`, icon: ArrowUpRight, color: 'text-purple-400', bg: 'bg-purple-500/10' },
                   { label: 'WSR Rate', value: '$0.001', icon: TrendingUp, color: 'text-amber-400', bg: 'bg-amber-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
@@ -653,10 +508,10 @@ export default function AdminPage() {
                 <div className="grid grid-cols-[1fr_160px_80px_90px_80px_70px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                   <span>User</span><span>Address</span><span>XP</span><span>Unclaimed WSR</span><span>Claimed WSR</span><span>Chain</span>
                 </div>
-                {poolData?.walletUsers.length === 0 && (
+                {(data?.walletUsers || []).length === 0 && (
                   <div className="text-center py-6 text-muted-foreground text-sm">No wallets connected yet</div>
                 )}
-                {poolData?.walletUsers.map((w) => (
+                {(data?.walletUsers || []).map((w: any) => (
                   <div key={w.id} className="grid grid-cols-[1fr_160px_80px_90px_80px_70px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white shrink-0">
@@ -666,21 +521,21 @@ export default function AdminPage() {
                     </div>
                     <code className="text-[11px] text-muted-foreground truncate">{w.walletAddress ? `${w.walletAddress.slice(0, 6)}...${w.walletAddress.slice(-4)}` : '—'}</code>
                     <span className="text-[12px] font-bold text-emerald-400">{w.xp.toLocaleString()}</span>
-                    <span className="text-[12px] font-bold text-amber-400">{w.unclaimedWSR.toFixed(2)}</span>
-                    <span className="text-[12px] font-bold text-purple-400">{w.totalClaimedWSR.toFixed(2)}</span>
+                    <span className="text-[12px] font-bold text-amber-400">{(w.unclaimedWSR || 0).toFixed(2)}</span>
+                    <span className="text-[12px] font-bold text-purple-400">{(w.totalClaimedWSR || 0).toFixed(2)}</span>
                     <Badge className="text-[9px] bg-indigo-500/10 text-indigo-400 border-0 w-fit">{w.walletChain || 'Polygon'}</Badge>
                   </div>
                 ))}
               </div>
 
               {/* Recent Pool Transactions */}
-              {poolData?.recentPoolTxs && poolData.recentPoolTxs.length > 0 && (
+              {data?.poolTxs && data.poolTxs.length > 0 && (
                 <div className="bg-card/60 border border-border/30 rounded-xl p-5">
                   <h3 className="text-sm font-bold flex items-center gap-2 mb-4">
                     <Activity size={15} className="text-amber-400" /> Recent Fee Transactions
                   </h3>
                   <div className="space-y-1.5">
-                    {poolData.recentPoolTxs.map((tx) => (
+                    {data.poolTxs.map((tx: any) => (
                       <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
                         <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
                           <Flame size={14} className="text-amber-400" />
@@ -701,81 +556,48 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ═══════ OPTIONS ═══════ */}
-          {activeTab === 'options' && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Active Markets', value: '48', icon: Target, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Total Options', value: '186', icon: Layers, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'Total Volume', value: '$2.4M', icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Resolved', value: '124', icon: CheckCircle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
-                    <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
-                    <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
+          {/* ═══════ TRANSACTIONS ═══════ */}
+          {activeTab === 'transactions' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold">All Token Transactions ({o?.totalTokenTxs || 0})</h3>
               </div>
-              <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><Target size={15} className="text-indigo-400" /> Active Option Markets</h3>
-                <div className="space-y-2">
-                  {mockQuestions.slice(0, 5).map((q) => (
-                    <div key={q.id} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/20 hover:bg-secondary/30 transition-colors">
-                      {q.image && <img src={q.image} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-semibold truncate">{q.title}</p>
-                        <p className="text-[10px] text-muted-foreground">{q.options.length} options · {formatNumber(q.totalVotes)} votes</p>
-                      </div>
-                      <div className="flex gap-2">
-                        {q.options.slice(0, 2).map((opt) => (
-                          <Badge key={opt.id} className="text-[9px] border-0 bg-secondary/50">{opt.text}: {opt.percentage}%</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-[1fr_80px_70px_80px_1fr_80px] gap-2 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                  <span>User</span><span>Type</span><span>Amount</span><span>Status</span><span>Description</span><span>Date</span>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* ═══════ TRADING ═══════ */}
-          {activeTab === 'trading' && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Trades Today', value: '1,240', icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Volume Today', value: '$45.2K', icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Active Traders', value: '892', icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'Avg Trade', value: '$36.50', icon: TrendingUp, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
-                    <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
-                    <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-card/60 border border-border/30 rounded-xl p-5">
-                <h3 className="text-sm font-bold flex items-center gap-2 mb-4"><LineChart size={15} className="text-indigo-400" /> Live Trading Activity</h3>
-                <div className="space-y-1.5">
-                  {tradingActivity.map((t) => (
-                    <div key={t.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-secondary/20 transition-colors">
-                      <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', t.action.includes('YES') ? 'bg-emerald-500/10' : 'bg-red-500/10')}>
-                        {t.action.includes('YES') ? <ArrowUpRight size={14} className="text-emerald-400" /> : <ArrowDownRight size={14} className="text-red-400" />}
+                {(data?.recentTransactions || []).map((tx: any) => {
+                  const isCredit = ['earn', 'win', 'daily_bonus', 'referral'].includes(tx.type);
+                  return (
+                    <div key={tx.id} className="grid grid-cols-[1fr_80px_70px_80px_1fr_80px] gap-2 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                          {(tx.user?.displayName || tx.user?.username || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-[11px] font-semibold truncate">{tx.user?.displayName || tx.user?.username || 'System'}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-medium"><span className="font-bold">{t.user}</span> · {t.market}</p>
-                        <p className="text-[10px] text-muted-foreground">{t.time}</p>
-                      </div>
-                      <Badge className={cn('text-[9px] border-0', t.action.includes('YES') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400')}>{t.action}</Badge>
-                      <span className="text-[12px] font-bold">${t.amount}</span>
-                      <Badge className="text-[9px] bg-amber-500/10 text-amber-400 border-0">{t.odds}x</Badge>
-                      <Badge className={cn('text-[9px] border-0', t.status === 'filled' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400')}>{t.status}</Badge>
+                      <Badge className={cn('text-[8px] border-0 w-fit capitalize',
+                        tx.type === 'earn' ? 'bg-emerald-500/10 text-emerald-400' :
+                        tx.type === 'claim' ? 'bg-blue-500/10 text-blue-400' :
+                        tx.type === 'transfer' ? 'bg-purple-500/10 text-purple-400' :
+                        'bg-slate-500/10 text-slate-400'
+                      )}>{tx.type}</Badge>
+                      <span className={cn('text-[12px] font-bold font-mono', isCredit ? 'text-emerald-400' : 'text-blue-400')}>
+                        {isCredit ? '+' : ''}{tx.amount} {tx.type === 'claim' || tx.type === 'transfer' ? 'WSR' : 'XP'}
+                      </span>
+                      <Badge className={cn('text-[8px] border-0 w-fit',
+                        tx.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400' :
+                        tx.status === 'pending' ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-red-500/10 text-red-400'
+                      )}>{tx.status}</Badge>
+                      <span className="text-[10px] text-muted-foreground truncate">{tx.description || '—'}</span>
+                      <span className="text-[10px] text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString()}</span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
+                {(!data?.recentTransactions || data.recentTransactions.length === 0) && (
+                  <p className="text-center py-8 text-muted-foreground text-sm">No transactions yet</p>
+                )}
               </div>
             </div>
           )}
@@ -783,12 +605,12 @@ export default function AdminPage() {
           {/* ═══════ TIMERS ═══════ */}
           {activeTab === 'timers' && (
             <div className="space-y-5">
-              <h3 className="text-lg font-bold flex items-center gap-2"><Timer size={18} className="text-amber-400" /> Question Duration Tracking</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <h3 className="text-lg font-bold flex items-center gap-2"><Timer size={18} className="text-amber-400" /> Question Expiry Tracking</h3>
+              <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Active Questions', value: '48', icon: Flame, color: 'text-red-400', bg: 'bg-red-500/10' },
-                  { label: 'Ending Today', value: '5', icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                  { label: 'Ended This Week', value: '23', icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Active Questions', value: o?.activeQuestions || 0, icon: Flame, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { label: 'Expiring in 3 Days', value: o?.expiringSoon || 0, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                  { label: 'Total Questions', value: o?.totalQuestions || 0, icon: CheckCircle, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
                 ].map((s) => (
                   <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
                     <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
@@ -798,26 +620,24 @@ export default function AdminPage() {
                 ))}
               </div>
               <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                {mockQuestions.map((q) => {
-                  const expires = q.expiresAt ? new Date(q.expiresAt) : null;
+                {(data?.recentQuestions || []).filter((q: any) => q.expiresAt).map((q: any) => {
+                  const expires = new Date(q.expiresAt);
                   const now = new Date();
-                  const daysLeft = expires ? Math.max(0, Math.floor((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : null;
+                  const daysLeft = Math.max(0, Math.floor((expires.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                  const expired = expires < now;
                   return (
                     <div key={q.id} className="flex items-center gap-3 px-4 py-3 border-b border-border/10 hover:bg-secondary/10 transition-colors">
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-semibold truncate">{q.title}</p>
                         <p className="text-[10px] text-muted-foreground">{q.category} · {formatNumber(q.totalVotes)} votes</p>
                       </div>
-                      <div className="text-right">
-                        {daysLeft !== null ? (
-                          <Badge className={cn('text-[10px] border-0 gap-1', daysLeft <= 3 ? 'bg-red-500/10 text-red-400' : daysLeft <= 7 ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400')}>
-                            <Timer size={10} /> {daysLeft}d left
-                          </Badge>
-                        ) : (
-                          <Badge className="text-[10px] bg-slate-500/10 text-slate-400 border-0">No expiry</Badge>
-                        )}
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-[11px] h-7 gap-1 px-2"><Edit3 size={11} /> Edit</Button>
+                      <Badge className={cn('text-[10px] border-0 gap-1',
+                        expired ? 'bg-red-500/10 text-red-400' :
+                        daysLeft <= 3 ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-emerald-500/10 text-emerald-400'
+                      )}>
+                        <Timer size={10} /> {expired ? 'Expired' : `${daysLeft}d left`}
+                      </Badge>
                     </div>
                   );
                 })}
@@ -825,93 +645,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ═══════ MAIL ═══════ */}
-          {activeTab === 'mail' && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2"><Mail size={18} className="text-indigo-400" /> Email System</h3>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 text-[12px]"><Plus size={13} /> New Template</Button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Total Sent', value: '124.5K', icon: Send, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Avg Open Rate', value: '55.8%', icon: Eye, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Templates', value: '5', icon: Mail, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'Subscribers', value: '45.2K', icon: Users, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
-                    <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
-                    <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                <div className="grid grid-cols-[1fr_80px_80px_80px_80px_60px] gap-3 px-4 py-2.5 border-b border-border/20 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                  <span>Template</span><span>Type</span><span>Recipients</span><span>Open Rate</span><span>Last Sent</span><span></span>
-                </div>
-                {mailTemplates.map((m) => (
-                  <div key={m.id} className="grid grid-cols-[1fr_80px_80px_80px_80px_60px] gap-3 px-4 py-3 border-b border-border/10 items-center hover:bg-secondary/10 transition-colors">
-                    <div>
-                      <p className="text-[12px] font-semibold">{m.name}</p>
-                    </div>
-                    <Badge className="text-[9px] bg-indigo-500/10 text-indigo-400 border-0 w-fit capitalize">{m.type}</Badge>
-                    <span className="text-[12px]">{formatNumber(m.recipients)}</span>
-                    <span className="text-[12px] font-bold text-emerald-400">{m.openRate}%</span>
-                    <span className="text-[10px] text-muted-foreground">{m.lastSent}</span>
-                    <div className="flex gap-1">
-                      <button className="w-6 h-6 rounded bg-indigo-500/10 flex items-center justify-center hover:bg-indigo-500/20 transition-colors cursor-pointer border-0"><Send size={10} className="text-indigo-400" /></button>
-                      <button className="w-6 h-6 rounded bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer border-0"><Edit3 size={10} className="text-muted-foreground" /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ═══════ ADS ═══════ */}
-          {activeTab === 'ads' && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2"><Layers size={18} className="text-amber-400" /> Ad Management</h3>
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 text-[12px]"><Plus size={13} /> New Campaign</Button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Total Revenue', value: '$2,730', icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-                  { label: 'Impressions', value: '269.5K', icon: Eye, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-                  { label: 'Clicks', value: '6,700', icon: Target, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                  { label: 'Avg CTR', value: '2.49%', icon: TrendingUp, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-                ].map((s) => (
-                  <div key={s.label} className="bg-card/60 border border-border/30 rounded-xl p-4 text-center">
-                    <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2', s.bg)}><s.icon size={18} className={s.color} /></div>
-                    <div className="text-xl font-black">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-card/60 border border-border/30 rounded-xl overflow-hidden">
-                {adCampaigns.map((ad) => (
-                  <div key={ad.id} className="flex items-center gap-3 px-4 py-3.5 border-b border-border/10 hover:bg-secondary/10 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold">{ad.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{ad.startDate} → {ad.endDate}</p>
-                    </div>
-                    <Badge className={cn('text-[9px] border-0 capitalize', ad.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : ad.status === 'paused' ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-500/10 text-slate-400')}>{ad.status}</Badge>
-                    <div className="text-right">
-                      <p className="text-[11px]"><span className="text-muted-foreground">Imp:</span> <span className="font-bold">{formatNumber(ad.impressions)}</span></p>
-                      <p className="text-[11px]"><span className="text-muted-foreground">CTR:</span> <span className="font-bold text-indigo-400">{ad.ctr}%</span></p>
-                    </div>
-                    <span className="text-[13px] font-bold text-emerald-400">${ad.revenue}</span>
-                    <div className="flex gap-1">
-                      <button className="w-7 h-7 rounded-md bg-secondary/50 flex items-center justify-center hover:bg-secondary transition-colors cursor-pointer border-0"><Edit3 size={12} className="text-muted-foreground" /></button>
-                      <button className="w-7 h-7 rounded-md bg-red-500/10 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer border-0"><Trash2 size={12} className="text-red-400" /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </motion.div>
       </AnimatePresence>
     </div>
