@@ -146,21 +146,37 @@ export default function WalletPage() {
       setMessage({ type: 'success', text: 'Confirm the transaction in MetaMask...' });
       const txHash = await sendWSR(POOL_WALLET, onchainDepositAmount);
 
-      // Step 2: Wait for backend to verify on-chain and credit account
+      // Step 2: Wait for backend to verify on-chain and credit account (retry up to 6 times)
       setMessage({ type: 'success', text: 'Transaction sent! Verifying on chain...' });
-      const res = await fetch('/api/wallet/onchain-deposit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txHash }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage({ type: 'success', text: data.message || `Deposited ${onchainDepositAmount} WSR!` });
-        setShowOnchainDeposit(false);
-        fetchClaimData();
-        refreshWsrBalance();
-      } else {
-        setMessage({ type: 'error', text: data.error || 'Deposit verification failed' });
+      let verified = false;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        if (attempt > 0) {
+          setMessage({ type: 'success', text: `Waiting for confirmation... (attempt ${attempt + 1}/6)` });
+          await new Promise(r => setTimeout(r, 5000));
+        }
+        const res = await fetch('/api/wallet/onchain-deposit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ txHash }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setMessage({ type: 'success', text: data.message || `Deposited ${onchainDepositAmount} WSR!` });
+          setShowOnchainDeposit(false);
+          fetchClaimData();
+          refreshWsrBalance();
+          verified = true;
+          break;
+        } else if (data.error?.includes('not confirmed') && attempt < 5) {
+          continue; // retry
+        } else {
+          setMessage({ type: 'error', text: data.error || 'Deposit verification failed' });
+          verified = true;
+          break;
+        }
+      }
+      if (!verified) {
+        setMessage({ type: 'error', text: 'Transaction sent but verification timed out. TX: ' + txHash.slice(0, 14) + '... Try refreshing the page.' });
       }
     } catch (err: any) {
       if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
@@ -231,6 +247,26 @@ export default function WalletPage() {
               <RefreshCw size={12} /> Refresh
             </Button>
           </div>
+
+          {/* Your Wallet Address */}
+          {(address || claimData?.walletAddress) && (
+            <div className="bg-card/30 rounded-xl p-3 mt-3 flex items-center gap-2">
+              <Shield size={14} className="text-emerald-400 shrink-0" />
+              <p className="text-[10px] text-muted-foreground shrink-0">WSR Wallet:</p>
+              <p className="text-xs font-mono text-emerald-400 break-all select-all flex-1">{address || claimData?.walletAddress}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(address || claimData?.walletAddress || '');
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="shrink-0 px-2 py-1 rounded-lg bg-secondary/40 hover:bg-secondary/60 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                {copied ? <><CheckCircle2 size={10} className="text-emerald-400" /> Copied</> : <><Copy size={10} /> Copy</>}
+              </button>
+            </div>
+          )}
 
           {/* Stats grid */}
           <div className="grid grid-cols-4 gap-3 mt-5">

@@ -57,9 +57,9 @@ export async function POST(req: NextRequest) {
     let receipt = await provider.getTransactionReceipt(txHash);
 
     if (!receipt) {
-      // Wait and retry - Polygon Amoy can be slow
-      for (let i = 0; i < 5; i++) {
-        await new Promise(r => setTimeout(r, 3000));
+      // Wait and retry - Polygon Amoy RPC can be very slow
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 5000));
         receipt = await provider.getTransactionReceipt(txHash);
         if (receipt) break;
       }
