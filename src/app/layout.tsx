@@ -97,6 +97,15 @@ export default function RootLayout({
         <meta name="theme-color" content="#0a0a14" />
         <script
           async
+          src="https://www.googletagmanager.com/gtag/js?id=G-ZXRN5FPC5N"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-ZXRN5FPC5N');`,
+          }}
+        />
+        <script
+          async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9093377926430179"
           crossOrigin="anonymous"
         />
