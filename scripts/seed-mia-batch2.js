@@ -6,6 +6,12 @@ const PEXELS_KEY = 'BfFTWoN8xvMWRzJJmEsTrack7aZ9ANbmjMtKxWqezHgCfNwiXKUsvpQhS0';
 const TELEGRAM_BOT_TOKEN = '8757329203:AAGU3RTylnEiJp2THICnipA7XKcNDsjWsOA';
 const TELEGRAM_CHAT_ID = '-1003735489682';
 
+// Twitter OAuth 1.0a
+const TWITTER_CONSUMER_KEY = 'TF52ZNakNLG3vXYsN5uBEC2kx';
+const TWITTER_CONSUMER_SECRET = 'WW7iOGdo5TPyEKKCFsfWaJT9BUgFpkNnKAXdEvMyoOB4rNCYXF';
+const TWITTER_ACCESS_TOKEN = '455350462-SsAfd9ra0aA5ouU7IASp9LbsexDs4LoeubHRJint';
+const TWITTER_ACCESS_TOKEN_SECRET = 'ZBQLPsBuipCrLhqdIKxih2xk9WvXM2t8KOSjHe05vtjBS';
+
 // duration: 'daily' = 24h, 'weekly' = 7d, 'monthly' = 30d
 const newQuestions = [
   // ── DAILY (2) ──
@@ -136,6 +142,61 @@ async function sendTelegram(text) {
   }
 }
 
+async function sendTweet(questions) {
+  const crypto = require('crypto');
+
+  function percentEncode(str) {
+    return encodeURIComponent(str).replace(/!/g, '%21').replace(/\*/g, '%2A').replace(/'/g, '%27').replace(/\(/g, '%28').replace(/\)/g, '%29');
+  }
+
+  const url = 'https://api.twitter.com/2/tweets';
+  const oauthParams = {
+    oauth_consumer_key: TWITTER_CONSUMER_KEY,
+    oauth_nonce: crypto.randomBytes(16).toString('hex'),
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: TWITTER_ACCESS_TOKEN,
+    oauth_version: '1.0',
+  };
+
+  const sortedParams = Object.keys(oauthParams).sort().map(k => `${percentEncode(k)}=${percentEncode(oauthParams[k])}`).join('&');
+  const baseString = `POST&${percentEncode(url)}&${percentEncode(sortedParams)}`;
+  const signingKey = `${percentEncode(TWITTER_CONSUMER_SECRET)}&${percentEncode(TWITTER_ACCESS_TOKEN_SECRET)}`;
+  oauthParams.oauth_signature = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+  const authHeader = 'OAuth ' + Object.keys(oauthParams).sort().map(k => `${percentEncode(k)}="${percentEncode(oauthParams[k])}"`).join(', ');
+
+  const dailyCount = questions.filter(q => q.duration === 'daily').length;
+  const weeklyCount = questions.filter(q => q.duration === 'weekly').length;
+  const monthlyCount = questions.filter(q => q.duration === 'monthly').length;
+
+  let breakdown = '';
+  if (dailyCount > 0) breakdown += `⏰ ${dailyCount} Daily\n`;
+  if (weeklyCount > 0) breakdown += `📅 ${weeklyCount} Weekly\n`;
+  if (monthlyCount > 0) breakdown += `📆 ${monthlyCount} Monthly\n`;
+
+  let text = `🔥 ${questions.length} new questions just dropped on Wisery!\n\n${breakdown}\nVote & earn XP rewards 🏆\n\n👉 wisery.live/feed\n\n#Wisery #PredictionMarket #VoteToEarn #Crypto`;
+  if (text.length > 280) text = text.substring(0, 277) + '...';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: authHeader, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const data = await res.json();
+    if (res.ok && data.data?.id) {
+      console.log(`  Tweet ID: ${data.data.id}`);
+      return true;
+    }
+    console.error('Twitter error:', JSON.stringify(data));
+    return false;
+  } catch (e) {
+    console.error('Twitter error:', e.message);
+    return false;
+  }
+}
+
 async function main() {
   const client = new Client({ host: '127.0.0.1', port: 5432, user: 'wisery', password: 'wisery2026', database: 'wisery_db' });
   await client.connect();
@@ -223,6 +284,11 @@ async function main() {
 
   const sent = await sendTelegram(msg);
   console.log(sent ? '✓ Telegram notification sent!' : '✗ Telegram notification failed');
+
+  // Send Twitter notification
+  console.log('\nSending Twitter notification...');
+  const tweetSent = await sendTweet(createdQuestions);
+  console.log(tweetSent ? '✓ Tweet sent!' : '✗ Tweet failed');
 
   console.log(`\nDone! Created ${createdQuestions.length} questions.`);
 }

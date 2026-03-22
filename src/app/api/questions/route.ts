@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getQuestions, createQuestion } from '@/lib/database';
 import { getCurrentUser } from '@/lib/auth';
 import { notifyNewQuestion } from '@/lib/telegram';
+import { tweetNewQuestion } from '@/lib/twitter';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,8 +37,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const question = await createQuestion(user.id, body);
 
-    // Notify Telegram group with direct vote link
+    // Notify Telegram group + Twitter
     notifyNewQuestion(body.title, body.category, user.username || 'user', question.id).catch(() => {});
+    tweetNewQuestion(body.title, body.category, question.id).catch(() => {});
 
     return NextResponse.json(question, { status: 201 });
   } catch (error) {
